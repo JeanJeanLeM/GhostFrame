@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Simple</title>
+    <meta name="description" content="Un jeu de quiz simple avec questions à choix multiples">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .quiz-container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .question {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .option {
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .option:hover {
+            border-color: #007bff;
+            background-color: #f8f9fa;
+        }
+        .option.selected {
+            border-color: #007bff;
+            background-color: #e7f3ff;
+        }
+        .option.correct {
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+        .option.incorrect {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        .score {
+            text-align: center;
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+        .button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 10px 5px;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>🧠 Quiz Simple</h1>
+        
+        <div id="game-area">
+            <div class="score">Score: <span id="score">0</span> / <span id="total">0</span></div>
+            
+            <div id="question-container">
+                <div class="question" id="question-text">Chargement de la question...</div>
+                
+                <div class="options" id="options-container">
+                    <!-- Options générées dynamiquement -->
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="button" id="next-btn" onclick="nextQuestion()" disabled>
+                        Question suivante
+                    </button>
+                    <button class="button" id="restart-btn" onclick="restartQuiz()" style="display: none;">
+                        Recommencer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Données du quiz
+        const questions = [
+            {
+                question: "Quelle est la capitale de la France ?",
+                options: ["Londres", "Berlin", "Paris", "Madrid"],
+                correct: 2
+            },
+            {
+                question: "Combien font 2 + 2 ?",
+                options: ["3", "4", "5", "6"],
+                correct: 1
+            },
+            {
+                question: "Quel est le plus grand océan ?",
+                options: ["Atlantique", "Indien", "Arctique", "Pacifique"],
+                correct: 3
+            },
+            {
+                question: "En quelle année l'homme a-t-il marché sur la Lune ?",
+                options: ["1967", "1969", "1971", "1973"],
+                correct: 1
+            },
+            {
+                question: "Quel est le symbole chimique de l'or ?",
+                options: ["Go", "Au", "Or", "Ag"],
+                correct: 1
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let selectedOption = -1;
+
+        function loadQuestion() {
+            if (currentQuestion >= questions.length) {
+                showResults();
+                return;
+            }
+
+            const q = questions[currentQuestion];
+            document.getElementById('question-text').textContent = q.question;
+            document.getElementById('total').textContent = questions.length;
+            
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            q.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option';
+                optionDiv.textContent = option;
+                optionDiv.onclick = () => selectOption(index);
+                optionDiv.dataset.index = index;
+                optionsContainer.appendChild(optionDiv);
+            });
+            
+            selectedOption = -1;
+            document.getElementById('next-btn').disabled = true;
+        }
+
+        function selectOption(index) {
+            // Désélectionner toutes les options
+            document.querySelectorAll('.option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // Sélectionner l'option cliquée
+            const selectedDiv = document.querySelector(`[data-index="${index}"]`);
+            selectedDiv.classList.add('selected');
+            
+            selectedOption = index;
+            document.getElementById('next-btn').disabled = false;
+        }
+
+        function nextQuestion() {
+            if (selectedOption === -1) return;
+            
+            const q = questions[currentQuestion];
+            const options = document.querySelectorAll('.option');
+            
+            // Montrer la bonne réponse
+            options.forEach((opt, index) => {
+                if (index === q.correct) {
+                    opt.classList.add('correct');
+                } else if (index === selectedOption && index !== q.correct) {
+                    opt.classList.add('incorrect');
+                }
+                opt.onclick = null; // Désactiver les clics
+            });
+            
+            // Mettre à jour le score
+            if (selectedOption === q.correct) {
+                score++;
+                document.getElementById('score').textContent = score;
+            }
+            
+            // Passer à la question suivante après un délai
+            setTimeout(() => {
+                currentQuestion++;
+                loadQuestion();
+            }, 2000);
+        }
+
+        function showResults() {
+            const percentage = Math.round((score / questions.length) * 100);
+            let message = '';
+            
+            if (percentage >= 80) {
+                message = '🏆 Excellent ! Vous êtes un expert !';
+            } else if (percentage >= 60) {
+                message = '👍 Bien joué ! Pas mal du tout !';
+            } else if (percentage >= 40) {
+                message = '🤔 Pas mal, mais vous pouvez mieux faire !';
+            } else {
+                message = '📚 Il faut réviser un peu plus !';
+            }
+            
+            document.getElementById('question-container').innerHTML = `
+                <div style="text-align: center;">
+                    <h2>🎯 Résultats</h2>
+                    <div class="score">Score final: ${score} / ${questions.length} (${percentage}%)</div>
+                    <p style="font-size: 1.2em; margin: 20px 0;">${message}</p>
+                    <button class="button" onclick="restartQuiz()">Recommencer</button>
+                </div>
+            `;
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            selectedOption = -1;
+            document.getElementById('score').textContent = '0';
+            loadQuestion();
+        }
+
+        // Initialiser le quiz
+        loadQuestion();
+    </script>
+</body>
+</html>

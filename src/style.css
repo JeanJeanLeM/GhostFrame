@@ -1,0 +1,184 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom base styles */
+@layer base {
+  html {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  
+  body {
+    @apply text-gray-900 antialiased;
+  }
+}
+
+/* Custom components */
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+  
+  .btn-primary {
+    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+  }
+  
+  .btn-secondary {
+    @apply btn bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-500;
+  }
+  
+  .btn-success {
+    @apply btn bg-success-600 text-white hover:bg-success-700 focus:ring-success-500;
+  }
+  
+  .btn-danger {
+    @apply btn bg-error-600 text-white hover:bg-error-700 focus:ring-error-500;
+  }
+  
+  .btn-disabled {
+    @apply btn bg-gray-300 text-gray-500 cursor-not-allowed;
+  }
+  
+  .input {
+    @apply px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+  }
+  
+  .card:not(.setup-card):not([class*="game-card"]) {
+    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
+  }
+
+  /* Player Cards Styles */
+  .player-card {
+    @apply relative bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg border border-gray-200 p-4 transition-all duration-300 hover:shadow-xl hover:scale-105;
+  }
+
+  .player-card.online {
+    @apply border-green-300 bg-gradient-to-br from-green-50 to-white;
+  }
+
+  .player-card.offline {
+    @apply border-gray-300 bg-gradient-to-br from-gray-50 to-white opacity-75;
+  }
+
+  .player-card.current-user {
+    @apply border-blue-300 bg-gradient-to-br from-blue-50 to-white ring-2 ring-blue-200;
+  }
+
+  .player-card.host {
+    @apply border-yellow-300 bg-gradient-to-br from-yellow-50 to-white;
+  }
+
+  .player-avatar {
+    @apply w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md;
+  }
+
+  .player-avatar.online {
+    @apply bg-gradient-to-br from-green-500 to-green-600;
+  }
+
+  .player-avatar.offline {
+    @apply bg-gradient-to-br from-gray-400 to-gray-500;
+  }
+
+  .player-status-badge {
+    @apply px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide;
+  }
+
+  .player-status-badge.ready {
+    @apply bg-green-100 text-green-800 border border-green-200;
+  }
+
+  .player-status-badge.waiting {
+    @apply bg-gray-100 text-gray-600 border border-gray-200;
+  }
+
+  .player-status-badge.online {
+    @apply bg-green-100 text-green-700;
+  }
+
+  .player-status-badge.offline {
+    @apply bg-red-100 text-red-700;
+  }
+
+  .player-role-indicator {
+    @apply absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center text-lg shadow-lg;
+  }
+
+  .player-role-indicator.host {
+    @apply bg-gradient-to-br from-yellow-400 to-yellow-500 text-white;
+  }
+
+  /* Game Card Enhancements - Only for game selector cards */
+  .game-selector .game-card {
+    @apply relative;
+  }
+
+  .game-selector .game-card::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-gray-50 opacity-0 transition-opacity duration-300 rounded-xl pointer-events-none;
+  }
+
+  .game-selector .game-card:hover::before {
+    @apply opacity-100;
+  }
+
+  /* Enhanced Button Styles */
+  .btn-primary {
+    @apply relative overflow-hidden;
+  }
+
+  .btn-primary::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 transform -skew-x-12 -translate-x-full transition-all duration-700;
+  }
+
+  .btn-primary:hover::before {
+    @apply opacity-20 translate-x-full;
+  }
+
+  /* Smooth animations for all interactive elements */
+  .player-card, .game-card, .btn {
+    @apply transform-gpu;
+  }
+
+  /* Loading states */
+  .loading-card {
+    @apply animate-pulse bg-gray-200;
+  }
+
+  .loading-card::after {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent animate-pulse;
+  }
+  
+  .loading-spinner {
+    @apply animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600;
+  }
+}
+
+/* Animations */
+@layer utilities {
+  .fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  .slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
