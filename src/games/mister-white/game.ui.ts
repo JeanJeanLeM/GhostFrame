@@ -3,7 +3,7 @@ import {
   MisterWhiteGameState, 
   MisterWhiteRole, 
   LocalPlayer,
-  EmojiPair
+  getRoleDistributionRows
 } from './game.state'
 import QRCode from 'qrcode'
 
@@ -21,7 +21,7 @@ export class MisterWhiteGameUI implements GameUI {
     const state = gameState as MisterWhiteGameState
     
     const container = document.createElement('div')
-    container.className = 'game-board min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col'
+    container.className = 'game-board min-h-screen bg-gradient-to-br from-beige-100 via-beige-200 to-beige-100 flex flex-col'
     
     // Ajouter les styles CSS pour les animations 3D
     this.injectFlipCardStyles()
@@ -29,6 +29,9 @@ export class MisterWhiteGameUI implements GameUI {
     switch (state.phase) {
       case 'loading':
         container.appendChild(this.renderLoadingScreen(state))
+        break
+      case 'home':
+        container.appendChild(this.renderHomeScreen(state))
         break
       case 'rules':
         container.appendChild(this.renderRulesScreen(state))
@@ -100,104 +103,229 @@ export class MisterWhiteGameUI implements GameUI {
   
   private renderLoadingScreen(state: MisterWhiteGameState): HTMLElement {
     const screen = document.createElement('div')
-    screen.className = 'mister-white-game screen-loading flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900'
+    screen.className = 'mister-white-game screen-loading relative flex flex-col min-h-screen overflow-hidden'
     
     screen.innerHTML = `
-      <div class="text-center w-full">
-        <!-- Logo Ghost Frame en très grand - 100% largeur -->
+      <img
+        src="/home-background-9x16.png"
+        alt=""
+        class="absolute inset-0 w-full h-full object-cover object-center"
+        aria-hidden="true"
+      />
+      <div class="absolute inset-0 bg-gradient-to-b from-beige-900/50 via-beige-900/25 to-beige-900/55"></div>
+      <div id="loading-flashes" class="absolute inset-0 pointer-events-none overflow-hidden z-[1]"></div>
+      <div id="screen-flash" class="absolute inset-0 bg-white pointer-events-none opacity-0 z-[2]"></div>
+
+      <div class="relative z-10 text-center w-full flex flex-col items-center justify-center min-h-screen px-6">
         <div class="mb-16 w-full">
-          <img src="/GhostFromelogoRBG.png" alt="Ghost Frame Logo" class="w-full max-w-md mx-auto drop-shadow-2xl animate-pulse" />
+          <img src="/LogoGF.png" alt="Ghost Frame Logo" class="w-full max-w-md mx-auto drop-shadow-2xl animate-pulse" />
         </div>
-        
-        <!-- Barre de progression -->
-        <div class="progress-container mb-4 max-w-lg mx-auto">
-          <div class="w-full bg-slate-700 rounded-full h-2">
-            <div id="loading-progress" class="bg-gradient-to-r from-red-500 to-purple-500 h-2 rounded-full transition-all duration-100" style="width: 0%"></div>
+
+        <div class="progress-container mb-4 max-w-lg mx-auto w-full">
+          <div class="w-full bg-beige-300/50 rounded-full h-2 backdrop-blur-sm">
+            <div id="loading-progress" class="bg-gradient-to-r from-primary-400 to-primary-500 h-2 rounded-full transition-all duration-100 shadow-lg shadow-primary-500/30" style="width: 0%"></div>
           </div>
         </div>
-        
-        <p class="text-gray-300 text-lg">Chargement en cours...</p>
+
+        <p class="text-beige-100 text-lg drop-shadow-md font-medium">Chargement en cours...</p>
       </div>
     `
     
-    // Simuler la progression de chargement
     this.startLoadingAnimation(screen)
     
     return screen
   }
   
-  private renderRulesScreen(state: MisterWhiteGameState): HTMLElement {
+  private renderHomeScreen(_state: MisterWhiteGameState): HTMLElement {
     const screen = document.createElement('div')
-    screen.className = 'mister-white-game screen-rules w-full px-2 pt-0 pb-4 max-w-2xl mx-auto'
-    
+    screen.className = 'mister-white-game screen-home relative flex flex-col items-center justify-center min-h-screen overflow-hidden'
+
     screen.innerHTML = `
-      <img src="/GhostFromelogoRBG.png" alt="Ghost Frame" class="w-full max-w-xl h-52 object-contain mx-auto drop-shadow-2xl" />
-      <p class="text-gray-300 text-sm mb-2 text-center">Jeu de déduction et de bluff</p>
-      
-      <div class="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-6 border border-slate-700 mb-8">
-        <h2 class="text-2xl font-bold text-white mb-6 text-center">🎯 Règles du jeu</h2>
-        <div class="space-y-4 text-gray-300">
-          <div class="flex items-start">
-            <span class="text-2xl mr-4 mt-1">👥</span>
-            <div>
-              <strong class="text-white">Rôles :</strong> 
-              Civils (voient le même emoji), Imposteurs (voient un emoji différent), Ghost Frame (ne voit rien)
-            </div>
-          </div>
-          <div class="flex items-start">
-            <span class="text-2xl mr-4 mt-1">💭</span>
-            <div>
-              <strong class="text-white">Discussion :</strong> 
-              Chaque joueur dit un mot à voix haute dans l'ordre pour décrire son emoji
-            </div>
-          </div>
-          <div class="flex items-start">
-            <span class="text-2xl mr-4 mt-1">🗳️</span>
-            <div>
-              <strong class="text-white">Vote :</strong> 
-              Éliminez la personne que vous pensez être le Ghost Frame
-            </div>
-          </div>
-          <div class="flex items-start">
-            <span class="text-2xl mr-4 mt-1">🎯</span>
-            <div>
-              <strong class="text-white">Victoire Ghost Frame :</strong> 
-              Reste en vie avec 1 autre personne OU devine le mot secret des civils si éliminé
-            </div>
-          </div>
-          <div class="flex items-start">
-            <span class="text-2xl mr-4 mt-1">🏆</span>
-            <div>
-              <strong class="text-white">Victoire Civils/Imposteurs :</strong> 
-              Éliminez le Ghost Frame et l'empêcher de deviner le mot secret
-            </div>
-          </div>
+      <img
+        src="/home-background-9x16.png"
+        alt=""
+        class="absolute inset-0 w-full h-full object-cover object-center"
+        aria-hidden="true"
+      />
+      <div class="absolute inset-0 bg-gradient-to-b from-beige-100/75 via-beige-50/80 to-beige-100/85 backdrop-blur-[2px]"></div>
+
+      <div class="relative z-10 w-full max-w-sm flex flex-col items-center justify-center flex-1 px-4 py-6">
+        <img src="/LogoGF.png" alt="Ghost Frame" class="w-full max-w-[220px] h-auto object-contain mx-auto drop-shadow-2xl mb-4" />
+        <p class="text-beige-800 text-sm text-center mb-8 leading-snug font-medium drop-shadow-sm">
+          Jeu de déduction et de bluff<br>Qui a la bonne photo ?
+        </p>
+
+        <div class="w-full flex flex-col gap-3">
+          <button
+            id="start-game-btn"
+            type="button"
+            class="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold py-4 px-6 rounded-xl text-lg transition-all transform hover:scale-[1.02] hover:shadow-xl hover:shadow-primary-500/25"
+          >
+            Démarrer une partie
+          </button>
+          <button
+            id="show-rules-btn"
+            type="button"
+            class="w-full border-2 border-beige-400/80 bg-beige-50/90 hover:bg-beige-100 text-beige-900 font-semibold py-3.5 px-6 rounded-xl text-base transition-all backdrop-blur-sm shadow-sm"
+          >
+            Règles du jeu
+          </button>
+          <button
+            id="share-game-btn"
+            type="button"
+            class="w-full border-2 border-beige-400/80 bg-beige-50/90 hover:bg-beige-100 text-beige-900 font-semibold py-3.5 px-6 rounded-xl text-base transition-all backdrop-blur-sm shadow-sm"
+          >
+            Partager le jeu
+          </button>
         </div>
-      </div>
-      
-      <button 
-        id="start-from-rules-btn"
-        class="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-4 px-6 rounded-xl text-lg uppercase tracking-wide transition-all transform hover:scale-105 hover:shadow-xl hover:shadow-red-500/25 mb-6"
-      >
-        🚀 Démarrer une partie
-      </button>
-      
-      <!-- QR Code pour partager l'app -->
-      <div class="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-4 border border-slate-700 text-center">
-        <p class="text-gray-300 text-sm mb-3">📱 Partagez l'app avec vos amis</p>
-        <div id="share-qr-code" class="flex justify-center mb-3">
-          <div class="bg-white p-3 rounded-xl">
-            <canvas id="qr-canvas" width="150" height="150"></canvas>
-          </div>
-        </div>
-        <p class="text-gray-400 text-xs">Scannez pour accéder à Ghost Frame</p>
       </div>
     `
-    
-    this.attachRulesEventListeners(screen)
-    this.generateShareQRCode(screen)
-    
+
+    this.attachHomeEventListeners(screen)
+
     return screen
+  }
+
+  private renderRulesScreen(_state: MisterWhiteGameState): HTMLElement {
+    const screen = document.createElement('div')
+    screen.className = 'mister-white-game screen-rules flex flex-col min-h-screen px-4 py-4 max-w-lg mx-auto bg-gradient-to-br from-beige-100 via-beige-200 to-beige-100'
+
+    screen.innerHTML = `
+      <div class="flex flex-col flex-1 min-h-0">
+        <button
+          id="back-to-home-btn"
+          type="button"
+          class="text-beige-700 hover:text-beige-900 text-sm font-medium mb-3 flex items-center gap-1 transition-colors flex-shrink-0"
+        >
+          ← Retour
+        </button>
+
+        <div class="flex-1 overflow-y-auto min-h-0 pb-4">
+          <h1 class="text-xl font-bold text-beige-900 text-center mb-1">Règles rapides</h1>
+          <p class="text-beige-700 text-sm text-center mb-4">
+            Le jeu se joue sur un seul téléphone. Chaque joueur découvre secrètement son image à son tour.
+          </p>
+
+          <div class="space-y-2 mb-4">
+            <div class="flex items-center gap-3 bg-beige-200/80 rounded-xl p-2.5 border border-beige-400">
+              <img src="/Expert.png" alt="Expert" class="w-14 h-14 object-contain flex-shrink-0 rounded-lg" />
+              <div class="text-sm text-beige-800">
+                <strong class="text-beige-900 block mb-0.5">Expert</strong>
+                A la bonne image — la vraie scène capturée.
+              </div>
+            </div>
+            <div class="flex items-center gap-3 bg-beige-200/80 rounded-xl p-2.5 border border-beige-400">
+              <img src="/Novice.png" alt="Novice" class="w-14 h-14 object-contain flex-shrink-0 rounded-lg" />
+              <div class="text-sm text-beige-800">
+                <strong class="text-beige-900 block mb-0.5">Novice</strong>
+                A une autre image — proche, mais pas la bonne.
+              </div>
+            </div>
+            <div class="flex items-center gap-3 bg-beige-200/80 rounded-xl p-2.5 border border-beige-400">
+              <img src="/Fantome.png" alt="Fantôme" class="w-14 h-14 object-contain flex-shrink-0 rounded-lg" />
+              <div class="text-sm text-beige-800">
+                <strong class="text-beige-900 block mb-0.5">Fantôme</strong>
+                N'a pas d'image — carte SD vide, il doit bluffer.
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-2 mb-4">
+            <h2 class="text-sm font-bold text-beige-900 uppercase tracking-wide">Répartition des rôles</h2>
+            <div class="bg-beige-200/80 rounded-xl border border-beige-400 overflow-hidden">
+              <table class="w-full text-xs text-beige-800">
+                <thead>
+                  <tr class="border-b border-beige-400 bg-beige-300/50">
+                    <th class="py-2 px-2 font-semibold text-beige-900 text-center">Joueurs</th>
+                    <th class="py-2 px-1 font-semibold text-beige-900 text-center">Experts</th>
+                    <th class="py-2 px-1 font-semibold text-beige-900 text-center">Novices</th>
+                    <th class="py-2 px-1 font-semibold text-beige-900 text-center">Fantômes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${this.renderRoleDistributionRows()}
+                </tbody>
+              </table>
+            </div>
+            <p class="text-beige-600 text-xs text-center">Pas de Fantôme en dessous de 5 joueurs.</p>
+          </div>
+
+          <div class="space-y-2 mb-4">
+            <h2 class="text-sm font-bold text-beige-900 uppercase tracking-wide">Déroulement</h2>
+            <div class="flex items-start gap-2.5 bg-beige-200/80 rounded-xl p-2.5 border border-beige-400">
+              <span class="text-lg leading-none mt-0.5">💭</span>
+              <div class="text-sm text-beige-800">
+                <strong class="text-beige-900 block mb-0.5">Discussion</strong>
+                Chaque joueur dit un mot pour décrire sa photo, sans la montrer. Puis échange libre pour repérer les incohérences.
+              </div>
+            </div>
+            <div class="flex items-start gap-2.5 bg-beige-200/80 rounded-xl p-2.5 border border-beige-400">
+              <span class="text-lg leading-none mt-0.5">🗳️</span>
+              <div class="text-sm text-beige-800">
+                <strong class="text-beige-900 block mb-0.5">Vote</strong>
+                Désignez la personne que vous pensez être le Fantôme. Le joueur éliminé est dévoilé.
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <h2 class="text-sm font-bold text-beige-900 uppercase tracking-wide">Conditions de victoire</h2>
+            <div class="flex items-start gap-2.5 bg-beige-200/80 rounded-xl p-2.5 border border-beige-400">
+              <span class="text-lg leading-none mt-0.5">👻</span>
+              <div class="text-sm text-beige-800">
+                <strong class="text-beige-900 block mb-0.5">Fantôme</strong>
+                Reste en vie avec 1 autre joueur, ou devine le mot secret s'il est éliminé.
+              </div>
+            </div>
+            <div class="flex items-start gap-2.5 bg-beige-200/80 rounded-xl p-2.5 border border-beige-400">
+              <span class="text-lg leading-none mt-0.5">📸</span>
+              <div class="text-sm text-beige-800">
+                <strong class="text-beige-900 block mb-0.5">Experts</strong>
+                Éliminent le Fantôme et l'empêchent de deviner le mot secret.
+              </div>
+            </div>
+            <div class="flex items-start gap-2.5 bg-beige-200/80 rounded-xl p-2.5 border border-beige-400">
+              <span class="text-lg leading-none mt-0.5">🎯</span>
+              <div class="text-sm text-beige-800">
+                <strong class="text-beige-900 block mb-0.5">Novices</strong>
+                Tous les Experts sont éliminés et le Fantôme aussi.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-3 space-y-2 flex-shrink-0 border-t border-beige-300/60">
+          <button
+            id="extended-rules-btn"
+            type="button"
+            class="w-full border-2 border-primary-500 text-primary-600 hover:bg-primary-50 font-semibold py-2.5 px-6 rounded-xl text-sm transition-all"
+          >
+            Règles complètes
+          </button>
+          <button
+            id="start-from-rules-btn"
+            class="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold py-3.5 px-6 rounded-xl text-base transition-all"
+          >
+            Démarrer une partie
+          </button>
+        </div>
+      </div>
+    `
+
+    this.attachRulesEventListeners(screen)
+
+    return screen
+  }
+
+  private renderRoleDistributionRows(): string {
+    return getRoleDistributionRows(3, 10).map((row, index) => `
+      <tr class="${index % 2 === 0 ? 'bg-beige-100/40' : ''}">
+        <td class="py-1.5 px-2 text-center font-medium text-beige-900">${row.players}</td>
+        <td class="py-1.5 px-1 text-center">${row.experts}</td>
+        <td class="py-1.5 px-1 text-center">${row.novices}</td>
+        <td class="py-1.5 px-1 text-center">${row.fantomes > 0 ? row.fantomes : '—'}</td>
+      </tr>
+    `).join('')
   }
   
   private renderConfigScreen(state: MisterWhiteGameState): HTMLElement {
@@ -205,16 +333,16 @@ export class MisterWhiteGameUI implements GameUI {
     screen.className = 'mister-white-game screen-config w-full px-2 pt-0 pb-4 max-w-md mx-auto'
     
     screen.innerHTML = `
-      <img src="/GhostFromelogoRBG.png" alt="Ghost Frame" class="w-full max-w-lg h-44 object-contain mx-auto drop-shadow-lg" />
+      <img src="/LogoGF.png" alt="Ghost Frame" class="w-full max-w-lg h-44 object-contain mx-auto drop-shadow-lg" />
       <div class="flex items-center justify-center mb-1">
         <span class="text-xl mr-2">⚙️</span>
-        <h2 class="text-lg font-bold text-white">CONFIGURATION</h2>
+        <h2 class="text-lg font-bold text-beige-900">CONFIGURATION</h2>
       </div>
-      <p class="text-gray-300 mb-2 text-xs text-center">Paramètres de la partie</p>
+      <p class="text-beige-700 mb-2 text-xs text-center">Paramètres de la partie</p>
       
-      <div class="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-6 border border-slate-700 space-y-6">
+      <div class="bg-beige-200/80 backdrop-blur-sm rounded-2xl p-6 border border-beige-400 space-y-6">
         <div>
-          <label class="block text-gray-300 text-sm font-semibold mb-3 uppercase tracking-wide">
+          <label class="block text-beige-800 text-sm font-semibold mb-3 uppercase tracking-wide">
             Nombre de joueurs (3-10)
           </label>
           <input 
@@ -223,47 +351,30 @@ export class MisterWhiteGameUI implements GameUI {
             min="3" 
             max="10"
             value="${state.config.playerCount}"
-            class="w-full px-4 py-3 bg-slate-700/60 border-2 border-slate-600 text-white rounded-xl text-lg focus:outline-none focus:border-red-500 focus:shadow-lg focus:shadow-red-500/20 transition-all"
+            class="w-full px-4 py-3 bg-beige-100 border-2 border-beige-400 text-beige-900 rounded-xl text-lg focus:outline-none focus:border-primary-500 focus:shadow-lg focus:shadow-primary-500/20 transition-all"
           >
         </div>
         
         <div>
-          <label class="block text-gray-300 text-sm font-semibold mb-3 uppercase tracking-wide">
-            Mode de jeu
+          <label class="block text-beige-800 text-sm font-semibold mb-3 uppercase tracking-wide">
+            Paire de photos (dossier images)
           </label>
           <select 
-            id="mode-select"
-            class="w-full px-4 py-3 bg-slate-700/60 border-2 border-slate-600 text-white rounded-xl text-lg focus:outline-none focus:border-red-500 focus:shadow-lg focus:shadow-red-500/20 transition-all"
+            id="pair-select"
+            class="w-full px-4 py-3 bg-beige-100 border-2 border-beige-400 text-beige-900 rounded-xl text-lg focus:outline-none focus:border-primary-500 focus:shadow-lg focus:shadow-primary-500/20 transition-all"
           >
-            <option value="emoji" ${state.config.mode === 'emoji' ? 'selected' : ''}>😀 Emojis</option>
-            <option value="image" ${state.config.mode === 'image' ? 'selected' : ''}>🖼️ Images</option>
+            <option value="">Chargement…</option>
           </select>
+          <p class="text-beige-600 text-xs mt-1">Les paires sont lues depuis public/images-v2/pairs.json et public/images-v2/paire-XX/</p>
         </div>
         
         <div>
-          <label class="block text-gray-300 text-sm font-semibold mb-3 uppercase tracking-wide">
-            Thème
-          </label>
-          <select 
-            id="theme-select"
-            class="w-full px-4 py-3 bg-slate-700/60 border-2 border-slate-600 text-white rounded-xl text-lg focus:outline-none focus:border-red-500 focus:shadow-lg focus:shadow-red-500/20 transition-all"
-          >
-            <option value="libre" ${state.config.theme === 'libre' ? 'selected' : ''}>🎲 Libre</option>
-            <option value="animaux" ${state.config.theme === 'animaux' ? 'selected' : ''}>🐶 Animaux</option>
-            <option value="nourriture" ${state.config.theme === 'nourriture' ? 'selected' : ''}>🍕 Nourriture</option>
-            <option value="metiers" ${state.config.theme === 'metiers' ? 'selected' : ''}>👨‍💼 Métiers</option>
-            <option value="objets" ${state.config.theme === 'objets' ? 'selected' : ''}>📱 Objets</option>
-            <option value="emotions" ${state.config.theme === 'emotions' ? 'selected' : ''}>😊 Émotions</option>
-          </select>
-        </div>
-        
-        <div>
-          <label class="block text-gray-300 text-sm font-semibold mb-3 uppercase tracking-wide">
+          <label class="block text-beige-800 text-sm font-semibold mb-3 uppercase tracking-wide">
             Difficulté
           </label>
           <select 
             id="difficulty-select"
-            class="w-full px-4 py-3 bg-slate-700/60 border-2 border-slate-600 text-white rounded-xl text-lg focus:outline-none focus:border-red-500 focus:shadow-lg focus:shadow-red-500/20 transition-all"
+            class="w-full px-4 py-3 bg-beige-100 border-2 border-beige-400 text-beige-900 rounded-xl text-lg focus:outline-none focus:border-primary-500 focus:shadow-lg focus:shadow-primary-500/20 transition-all"
           >
             <option value="easy" ${state.config.difficulty === 'easy' ? 'selected' : ''}>😊 Facile</option>
             <option value="medium" ${state.config.difficulty === 'medium' ? 'selected' : ''}>🤔 Moyen</option>
@@ -272,12 +383,12 @@ export class MisterWhiteGameUI implements GameUI {
         </div>
         
         <div>
-          <label class="block text-gray-300 text-sm font-semibold mb-3 uppercase tracking-wide">
+          <label class="block text-beige-800 text-sm font-semibold mb-3 uppercase tracking-wide">
             Nombre de manches
           </label>
           <select 
             id="rounds-select"
-            class="w-full px-4 py-3 bg-slate-700/60 border-2 border-slate-600 text-white rounded-xl text-lg focus:outline-none focus:border-red-500 focus:shadow-lg focus:shadow-red-500/20 transition-all"
+            class="w-full px-4 py-3 bg-beige-100 border-2 border-beige-400 text-beige-900 rounded-xl text-lg focus:outline-none focus:border-primary-500 focus:shadow-lg focus:shadow-primary-500/20 transition-all"
           >
             <option value="1" ${state.config.rounds === 1 ? 'selected' : ''}>1 manche</option>
             <option value="3" ${state.config.rounds === 3 ? 'selected' : ''}>3 manches</option>
@@ -287,7 +398,7 @@ export class MisterWhiteGameUI implements GameUI {
         
         <button 
           id="validate-config-btn"
-          class="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-4 px-6 rounded-xl text-lg uppercase tracking-wide transition-all transform hover:scale-105 hover:shadow-xl hover:shadow-red-500/25"
+          class="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold py-4 px-6 rounded-xl text-lg uppercase tracking-wide transition-all transform hover:scale-105 hover:shadow-xl hover:shadow-primary-500/25"
         >
           Créer les cartes →
         </button>
@@ -307,13 +418,13 @@ export class MisterWhiteGameUI implements GameUI {
     const allConfigured = configuredCount === state.config.playerCount
     
     screen.innerHTML = `
-      <img src="/GhostFromelogoRBG.png" alt="Ghost Frame" class="w-full max-w-lg h-44 object-contain mx-auto drop-shadow-lg" />
+      <img src="/LogoGF.png" alt="Ghost Frame" class="w-full max-w-lg h-44 object-contain mx-auto drop-shadow-lg" />
       <div class="flex items-center justify-center mb-1">
         <span class="text-xl mr-2">🃏</span>
-        <h2 class="text-lg font-bold text-white">SETUP DES CARTES</h2>
+        <h2 class="text-lg font-bold text-beige-900">SETUP DES CARTES</h2>
       </div>
-      <p class="text-gray-300 mb-1 text-xs text-center">Cliquez sur une carte libre pour vous enregistrer</p>
-      <div class="text-xs text-gray-400 mb-2 text-center">
+      <p class="text-beige-700 mb-1 text-xs text-center">Cliquez sur une carte libre pour vous enregistrer</p>
+      <div class="text-xs text-beige-600 mb-2 text-center">
         ${configuredCount} / ${state.config.playerCount} joueurs configurés
       </div>
       
@@ -325,15 +436,15 @@ export class MisterWhiteGameUI implements GameUI {
         <div class="text-center mt-6">
           <button 
             id="start-game-btn"
-            class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-8 rounded-xl text-lg uppercase tracking-wide transition-all transform hover:scale-105 hover:shadow-xl hover:shadow-green-500/25"
+            class="bg-gradient-to-r from-success-500 to-success-600 hover:from-success-600 hover:to-success-700 text-white font-bold py-4 px-8 rounded-xl text-lg uppercase tracking-wide transition-all transform hover:scale-105 hover:shadow-xl hover:shadow-success-500/25"
           >
             🚀 Passer au jeu
           </button>
         </div>
       ` : `
-        <div class="bg-amber-500/20 border border-amber-500 rounded-2xl p-4 max-w-2xl mx-auto text-center mt-6">
-          <div class="text-amber-300 font-semibold mb-2">⚠️ Instructions</div>
-          <p class="text-gray-300 text-sm">
+        <div class="bg-warning-100 border border-warning-500 rounded-2xl p-4 max-w-2xl mx-auto text-center mt-6">
+          <div class="text-warning-700 font-semibold mb-2">⚠️ Instructions</div>
+          <p class="text-beige-800 text-sm">
             Chaque joueur doit cliquer sur une carte libre, saisir son prénom, voir son rôle, et valider.
           </p>
         </div>
@@ -351,14 +462,14 @@ export class MisterWhiteGameUI implements GameUI {
     screen.className = 'mister-white-game screen-game w-full px-2 pt-0 pb-4 mx-auto'
     
     screen.innerHTML = `
-      <img src="/GhostFromelogoRBG.png" alt="Ghost Frame" class="w-full max-w-md h-36 object-contain mx-auto drop-shadow-lg" />
+      <img src="/LogoGF.png" alt="Ghost Frame" class="w-full max-w-md h-36 object-contain mx-auto drop-shadow-lg" />
       
-      <div class="bg-red-500/20 border-2 border-red-500 rounded-xl p-2 mb-2 text-center max-w-md mx-auto">
-        <p class="text-gray-300 text-xs">Premier joueur :</p>
-        <div class="text-lg font-bold text-red-400">${state.gameData.firstPlayer}</div>
+      <div class="bg-error-100 border-2 border-error-500 rounded-xl p-2 mb-2 text-center max-w-md mx-auto">
+        <p class="text-beige-800 text-xs">Premier joueur :</p>
+        <div class="text-lg font-bold text-error-600">${state.gameData.firstPlayer}</div>
       </div>
       
-      <p class="text-yellow-300 font-semibold text-xs text-center mb-2">⚠️ Cliquez sur un joueur pour l'éliminer</p>
+      <p class="text-warning-700 font-semibold text-xs text-center mb-2">⚠️ Cliquez sur un joueur pour l'éliminer</p>
       
       <div class="game-cards grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
         ${this.renderGameCards(state)}
@@ -380,62 +491,53 @@ export class MisterWhiteGameUI implements GameUI {
     
     screen.innerHTML = `
       <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold bg-gradient-to-r from-red-500 to-purple-400 bg-clip-text text-transparent mb-4 tracking-wider">
+        <h1 class="text-4xl font-bold bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent mb-4 tracking-wider">
           🎯 ÉLIMINATION
         </h1>
       </div>
       
       ${lastEliminated ? `
-        <div class="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-6 border border-slate-700 mb-8 text-center">
+        <div class="bg-beige-200/80 backdrop-blur-sm rounded-2xl p-6 border border-beige-400 mb-8 text-center">
           <div class="text-6xl mb-4">💀</div>
-          <h2 class="text-2xl font-bold text-white mb-4">${lastEliminated.playerName} a été éliminé!</h2>
-          <div class="role-reveal ${lastEliminated.role} inline-block px-6 py-3 rounded-xl font-bold text-lg">
-            ${this.getRoleLabel(lastEliminated.role)}
-          </div>
+          <h2 class="text-2xl font-bold text-beige-900 mb-4">${lastEliminated.playerName} a été éliminé</h2>
         </div>
         
         ${isMissWhiteEliminated && state.gameData.guessPhase.isActive ? `
-          <div class="bg-purple-500/20 border-2 border-purple-500 rounded-2xl p-6 mb-8">
+          <div class="bg-primary-100 border-2 border-primary-500 rounded-2xl p-6 mb-8">
             <div class="text-center mb-6">
               <div class="text-4xl mb-3">📱</div>
-              <h3 class="text-xl font-bold text-purple-300 mb-2">Passez le téléphone !</h3>
-              <p class="text-gray-300">
-                Donnez le téléphone à <strong class="text-white">${lastEliminated.playerName}</strong>
+              <h3 class="text-xl font-bold text-primary-700 mb-2">Passez le téléphone !</h3>
+              <p class="text-beige-800">
+                Donnez le téléphone à <strong class="text-beige-900">${lastEliminated.playerName}</strong>
               </p>
-              <p class="text-sm text-gray-400 mt-2">
-                Le Ghost Frame peut tenter de deviner le mot secret des civils pour gagner !
+              <p class="text-sm text-beige-600 mt-2">
+                Le Fantôme peut tenter de deviner le mot secret pour gagner !
               </p>
             </div>
             
-            <div class="bg-slate-800/60 rounded-xl p-4 mb-6">
-              <h4 class="text-lg font-semibold text-white mb-3">🎯 Dernière chance !</h4>
-              <p class="text-gray-300 mb-2">
-                Devinez ce que les <strong>civils</strong> ont vu :
+            <div class="bg-beige-200/80 rounded-xl p-4 mb-6 border border-beige-300">
+              <h4 class="text-lg font-semibold text-beige-900 mb-3">🎯 Dernière chance !</h4>
+              <p class="text-beige-800 mb-2">
+                Devinez ce que les Experts ont capturé :
               </p>
-              <p class="text-gray-400 text-sm mb-4">
-                ${state.config.mode === 'emoji' 
-                  ? 'Tapez l\'emoji exact que les civils ont vu' 
-                  : 'Décrivez l\'image/concept que les civils ont vu'
-                }
+              <p class="text-beige-600 text-sm mb-4">
+                Décrivez l'image ou le concept que les Experts ont vu
               </p>
               
               <div class="space-y-4">
                 <input 
                   type="text" 
                   id="guess-input"
-                  placeholder="${state.config.mode === 'emoji' 
-                    ? 'Tapez l\'emoji (ex: 🍎)' 
-                    : 'Décrivez l\'image (ex: Pomme)'
-                  }"
-                  class="w-full px-4 py-3 bg-slate-700/60 border-2 border-slate-600 text-white rounded-xl text-lg focus:outline-none focus:border-purple-500 focus:shadow-lg focus:shadow-purple-500/20 transition-all ${state.config.mode === 'emoji' ? 'text-center' : ''}"
-                  maxlength="${state.config.mode === 'emoji' ? '10' : '100'}"
+                  placeholder="Décrivez l'image (ex: Pomme)"
+                  class="w-full px-4 py-3 bg-beige-100 border-2 border-beige-400 text-beige-900 rounded-xl text-lg focus:outline-none focus:border-primary-500 focus:shadow-lg focus:shadow-primary-500/20 transition-all"
+                  maxlength="100"
                 >
                 
                 <button 
                   id="submit-guess-btn"
-                  class="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl text-lg transition-all transform hover:scale-105"
+                  class="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold py-3 px-6 rounded-xl text-lg transition-all transform hover:scale-105"
                 >
-                  ✨ ${state.config.mode === 'emoji' ? 'Deviner l\'emoji' : 'Deviner l\'image'}
+                  ✨ Deviner l'image
                 </button>
               </div>
             </div>
@@ -446,7 +548,7 @@ export class MisterWhiteGameUI implements GameUI {
           <div class="text-center">
             <button 
               id="continue-btn"
-              class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-4 px-8 rounded-xl text-lg uppercase tracking-wide transition-all transform hover:scale-105"
+              class="bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold py-4 px-8 rounded-xl text-lg uppercase tracking-wide transition-all transform hover:scale-105"
             >
               ▶️ Continuer le jeu
             </button>
@@ -457,7 +559,7 @@ export class MisterWhiteGameUI implements GameUI {
           <div class="text-center">
             <button 
               id="continue-btn"
-              class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-8 rounded-xl text-lg uppercase tracking-wide transition-all transform hover:scale-105"
+              class="bg-gradient-to-r from-success-500 to-success-600 hover:from-success-600 hover:to-success-700 text-white font-bold py-4 px-8 rounded-xl text-lg uppercase tracking-wide transition-all transform hover:scale-105"
             >
               📊 Voir les scores
             </button>
@@ -481,10 +583,10 @@ export class MisterWhiteGameUI implements GameUI {
     
     screen.innerHTML = `
       <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold bg-gradient-to-r from-red-500 to-purple-400 bg-clip-text text-transparent mb-4 tracking-wider">
+        <h1 class="text-4xl font-bold bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent mb-4 tracking-wider">
           🏆 ${isLastRound ? 'RÉSULTATS FINAUX' : 'SCORES'}
         </h1>
-        <p class="text-gray-300">
+        <p class="text-beige-700">
           ${isLastRound ? 'Partie terminée !' : `Manche ${state.config.currentRound} / ${state.config.rounds}`}
         </p>
       </div>
@@ -493,45 +595,43 @@ export class MisterWhiteGameUI implements GameUI {
         ${winnerInfo.emoji}
       </div>
       
-      <h2 class="text-2xl font-bold text-white mb-8">${winnerInfo.text}</h2>
+      <h2 class="text-2xl font-bold text-beige-900 mb-8">${winnerInfo.text}</h2>
+      
+      ${this.renderRoundImagesRecap(state)}
       
       ${state.gameData.guessPhase.guessWord ? `
-        <div class="bg-purple-500/20 border border-purple-500 rounded-2xl p-4 mb-8">
-          <div class="text-lg font-semibold text-purple-300 mb-2">🎯 Devinette du Ghost Frame</div>
-          <p class="text-gray-300 mb-4">
-            Le Ghost Frame a deviné: 
-            <strong class="text-white ${state.config.mode === 'emoji' ? 'text-2xl' : ''}">${state.gameData.guessPhase.guessWord}</strong>
+        <div class="bg-primary-100 border border-primary-500 rounded-2xl p-4 mb-8">
+          <div class="text-lg font-semibold text-primary-700 mb-2">🎯 Devinette du Fantôme</div>
+          <p class="text-beige-800 mb-4">
+            Le Fantôme a deviné : 
+            <strong class="text-beige-900">${state.gameData.guessPhase.guessWord}</strong>
           </p>
-          <p class="text-gray-300 mb-4">
-            ${state.config.mode === 'emoji' ? 'Emoji' : 'Mot'} des civils: 
-            <strong class="text-white ${state.config.mode === 'emoji' ? 'text-2xl' : ''}">${
-              state.config.mode === 'emoji' 
-                ? state.gameData.currentEmojis?.civil 
-                : state.gameData.guessPhase.secretWord || 'À définir par les joueurs'
-            }</strong>
+          <p class="text-beige-800 mb-4">
+            Mot secret des Experts : 
+            <strong class="text-beige-900">${state.gameData.guessPhase.secretWord || 'À définir par les joueurs'}</strong>
           </p>
           
           ${state.gameData.guessPhase.needsValidation ? `
             <!-- Validation collective par les joueurs -->
-            <div class="bg-slate-800/60 rounded-xl p-4 mt-4">
-              <h4 class="text-lg font-semibold text-white mb-3">🗳️ Décision collective</h4>
-              <p class="text-gray-300 mb-4 text-sm">
-                Tous les joueurs se mettent d'accord à l'oral pour décider si la devinette du Ghost Frame est acceptable.
-                ${state.config.mode === 'image' ? 'Pour les images, soyez indulgents avec les descriptions !' : 'Pour les emojis, vérifiez bien la correspondance.'}
+            <div class="bg-beige-200/80 rounded-xl p-4 mt-4 border border-beige-300">
+              <h4 class="text-lg font-semibold text-beige-900 mb-3">🗳️ Décision collective</h4>
+              <p class="text-beige-800 mb-4 text-sm">
+                Tous les joueurs se mettent d'accord à l'oral pour décider si la devinette du Fantôme est acceptable.
+                Soyez indulgents avec les descriptions d'images !
               </p>
               
               <!-- Boutons de décision collective -->
               <div class="grid grid-cols-2 gap-4">
                 <button 
                   id="accept-guess-btn"
-                  class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-6 rounded-xl transition-all text-center"
+                  class="bg-gradient-to-r from-success-500 to-success-600 hover:from-success-600 hover:to-success-700 text-white font-bold py-4 px-6 rounded-xl transition-all text-center"
                 >
                   ✅ Accepter<br>
-                  <span class="text-sm font-normal">Ghost Frame gagne</span>
+                  <span class="text-sm font-normal">Le Fantôme gagne</span>
                 </button>
                 <button 
                   id="reject-guess-btn"
-                  class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-4 px-6 rounded-xl transition-all text-center"
+                  class="bg-gradient-to-r from-error-500 to-error-600 hover:from-error-600 hover:to-error-700 text-white font-bold py-4 px-6 rounded-xl transition-all text-center"
                 >
                   ❌ Refuser<br>
                   <span class="text-sm font-normal">Survivants gagnent</span>
@@ -542,16 +642,16 @@ export class MisterWhiteGameUI implements GameUI {
             <!-- Résultat final -->
             <div class="mt-4">
               ${state.gameData.guessPhase.isCorrect 
-                ? '<span class="text-green-400 font-bold">✅ Devinette acceptée ! Le Ghost Frame gagne la partie!</span>'
-                : '<span class="text-red-400 font-bold">❌ Devinette refusée - Victoire aux survivants !</span>'
+                ? '<span class="text-success-600 font-bold">✅ Devinette acceptée ! Le Fantôme gagne la partie !</span>'
+                : '<span class="text-error-600 font-bold">❌ Devinette refusée - Victoire aux survivants !</span>'
               }
             </div>
           `}
         </div>
       ` : ''}
       
-      <div class="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-6 border border-slate-700 mb-8">
-        <h3 class="text-xl font-bold text-white mb-4">🎖️ Classement</h3>
+      <div class="bg-beige-200/80 backdrop-blur-sm rounded-2xl p-6 border border-beige-400 mb-8">
+        <h3 class="text-xl font-bold text-beige-900 mb-4">🎖️ Classement</h3>
         <div class="space-y-3">
           ${this.renderScoresList(sortedPlayers, state)}
         </div>
@@ -561,7 +661,7 @@ export class MisterWhiteGameUI implements GameUI {
         ${!isLastRound ? `
           <button 
             id="next-round-btn"
-            class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-4 px-6 rounded-xl text-lg uppercase tracking-wide transition-all transform hover:scale-105"
+            class="bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold py-4 px-6 rounded-xl text-lg uppercase tracking-wide transition-all transform hover:scale-105"
           >
             🔄 Manche suivante
           </button>
@@ -570,13 +670,13 @@ export class MisterWhiteGameUI implements GameUI {
         <div class="flex flex-col sm:flex-row gap-4">
           <button 
             id="new-game-btn"
-            class="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-4 px-6 rounded-xl text-lg uppercase tracking-wide transition-all transform hover:scale-105"
+            class="flex-1 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold py-4 px-6 rounded-xl text-lg uppercase tracking-wide transition-all transform hover:scale-105"
           >
             🆕 Nouvelle partie
           </button>
           <button 
             id="reset-btn"
-            class="flex-1 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white font-bold py-4 px-6 rounded-xl text-lg uppercase tracking-wide transition-all transform hover:scale-105"
+            class="flex-1 bg-gradient-to-r from-beige-600 to-beige-700 hover:from-beige-700 hover:to-beige-800 text-white font-bold py-4 px-6 rounded-xl text-lg uppercase tracking-wide transition-all transform hover:scale-105"
           >
             🔄 Reset complet
           </button>
@@ -596,6 +696,7 @@ export class MisterWhiteGameUI implements GameUI {
       const isConfigured = player.cardConfigured
       const hasName = player.name && player.name.trim() !== ''
       const needsToSeeRole = hasName && !isConfigured  // A un nom mais doit voir son rôle
+      const emoji = this.getPlayerThemeEmoji(index)
       
       let cardClass = 'free'
       if (isConfigured) {
@@ -607,18 +708,10 @@ export class MisterWhiteGameUI implements GameUI {
       return `
         <div class="card setup-card ${cardClass}" data-card-index="${index}">
           <div class="card-inner">
-            <div class="card-face card-front">
-              ${isConfigured ? `
-                <div class="card-icon text-3xl mb-2">✅</div>
-                <div class="card-name text-sm font-bold text-white">${player.name}</div>
-                <div class="text-xs text-green-400 mt-1">Rôle vu</div>
-              ` : needsToSeeRole ? `
-                <div class="card-icon text-3xl mb-2">👤</div>
-                <div class="card-name text-sm font-bold text-white">${player.name}</div>
-              ` : `
-                <div class="card-icon text-4xl mb-2">👤</div>
-                <div class="card-text text-sm font-bold tracking-wide text-gray-300">Carte Libre</div>
-              `}
+            <div class="card-face card-front setup-card-face">
+              <div class="game-card-emoji">${isConfigured ? '✅' : emoji}</div>
+              <div class="game-card-separator"></div>
+              <div class="game-card-name">${isConfigured ? player.name : needsToSeeRole ? player.name : 'Carte Libre'}</div>
             </div>
           </div>
         </div>
@@ -627,16 +720,15 @@ export class MisterWhiteGameUI implements GameUI {
   }
   
   private renderRoleCards(state: MisterWhiteGameState): string {
-    // Mélanger les indices pour l'affichage aléatoire
+    const imgs = state.gameData.currentImages
+    if (!imgs) return ''
     const shuffledIndices = [...Array(state.players.length).keys()]
     this.shuffleArray(shuffledIndices)
-    
     return shuffledIndices.map(playerIndex => {
       const player = state.players[playerIndex]
       const role = player.role!
-      const emoji = this.getRoleEmoji(role, state.gameData.currentEmojis!)
       const isFlipped = state.gameData.cardsSeen[player.id] || false
-      
+      const imgUrl = role === 'ghost-frame' ? '/Fantome.png' : (role === 'civil' ? imgs.civil : imgs.impostor)
       return `
         <div class="card ${isFlipped ? 'flipped' : ''}" data-player-index="${playerIndex}">
           <div class="card-inner">
@@ -645,8 +737,7 @@ export class MisterWhiteGameUI implements GameUI {
               <div class="card-role text-xl font-bold tracking-wide">${player.name}</div>
             </div>
             <div class="card-face card-back ${role}">
-              <div class="card-role text-xl font-bold tracking-wide mb-4">${this.getRoleLabel(role)}</div>
-              <div class="card-emoji text-6xl mb-4">${emoji}</div>
+              <img src="${imgUrl}" alt="Rôle" class="w-24 h-24 object-contain mx-auto mb-2 rounded-lg" onerror="this.style.display='none'"/>
               <div class="card-player-name text-sm opacity-80">${player.name}</div>
             </div>
           </div>
@@ -655,19 +746,27 @@ export class MisterWhiteGameUI implements GameUI {
     }).join('')
   }
   
+  /** Emojis par thème : photo, mode, star, cinema, politicien, choc */
+  private static readonly PLAYER_THEME_EMOJIS = ['📷', '👗', '⭐', '🎬', '🎩', '😱']
+
+  private getPlayerThemeEmoji(playerIndex: number): string {
+    const emojis = MisterWhiteGameUI.PLAYER_THEME_EMOJIS
+    return emojis[playerIndex % emojis.length]
+  }
+
   private renderGameCards(state: MisterWhiteGameState): string {
-    return state.players.map(player => {
+    return state.players.map((player, index) => {
       const isEliminated = state.gameData.eliminatedPlayers.includes(player.id)
       const canVote = state.gameData.gamePhase.votingStarted && !isEliminated
+      const emoji = this.getPlayerThemeEmoji(index)
       
       return `
         <div class="game-card ${isEliminated ? 'eliminated' : canVote ? 'votable' : 'normal'}" data-player-id="${player.id}">
-          <div class="card-icon">${isEliminated ? '💀' : '👤'}</div>
-          <div class="player-name">${player.name}</div>
+          <div class="game-card-emoji">${isEliminated ? '💀' : emoji}</div>
+          <div class="game-card-separator"></div>
+          <div class="game-card-name">${player.name}</div>
           ${isEliminated ? `
-            <div class="role-reveal ${player.role}">
-              ${this.getRoleLabel(player.role!)}
-            </div>
+            <div class="game-card-status">Éliminé</div>
           ` : ''}
         </div>
       `
@@ -678,11 +777,9 @@ export class MisterWhiteGameUI implements GameUI {
     const survivors = state.players.filter(p => !p.isEliminated)
     
     return survivors.map(player => `
-      <div class="flex items-center justify-between p-3 bg-slate-700/40 rounded-lg border border-slate-600">
-        <span class="font-semibold text-white">${player.name}</span>
-        <span class="role-reveal ${player.role} px-3 py-1 rounded-full text-sm font-medium">
-          ${this.getRoleLabel(player.role!)}
-        </span>
+      <div class="flex items-center justify-between p-3 bg-beige-200 rounded-lg border border-beige-400">
+        <span class="font-semibold text-beige-900">${player.name}</span>
+        <span class="text-beige-600 text-sm">En jeu</span>
       </div>
     `).join('')
   }
@@ -751,8 +848,8 @@ export class MisterWhiteGameUI implements GameUI {
       }
       
       .mister-white-game .card-front {
-        background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #0f172a 100%);
-        border-color: rgba(239, 68, 68, 0.6);
+        background: linear-gradient(135deg, #3d3229 0%, #5c4d42 50%, #2d2520 100%);
+        border-color: rgba(184, 92, 74, 0.6);
         color: white;
         position: relative;
       }
@@ -770,7 +867,7 @@ export class MisterWhiteGameUI implements GameUI {
       }
       
       .mister-white-game .card-back {
-        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        background: linear-gradient(135deg, #3d3229 0%, #5c4d42 100%);
         transform: rotateY(180deg);
         color: white;
         position: relative;
@@ -789,79 +886,78 @@ export class MisterWhiteGameUI implements GameUI {
       }
       
       .mister-white-game .card-back.civil {
-        border-color: #10b981;
-        background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
-        box-shadow: 0 15px 35px rgba(16, 185, 129, 0.4), 0 5px 15px rgba(16, 185, 129, 0.2);
+        border-color: #6b8c69;
+        background: linear-gradient(135deg, #5a7a58 0%, #7d9b7a 50%, #8fab8c 100%);
+        box-shadow: 0 15px 35px rgba(125, 155, 122, 0.4), 0 5px 15px rgba(125, 155, 122, 0.2);
       }
       
       .mister-white-game .card-back.impostor {
-        border-color: #ef4444;
-        background: linear-gradient(135deg, #dc2626 0%, #ef4444 50%, #f87171 100%);
-        box-shadow: 0 15px 35px rgba(239, 68, 68, 0.4), 0 5px 15px rgba(239, 68, 68, 0.2);
+        border-color: #a04a3a;
+        background: linear-gradient(135deg, #8a3d2e 0%, #b85c4a 50%, #c97a6a 100%);
+        box-shadow: 0 15px 35px rgba(184, 92, 74, 0.4), 0 5px 15px rgba(184, 92, 74, 0.2);
       }
       
       .mister-white-game .card-back.ghost-frame {
-        border-color: #6b7280;
-        background: linear-gradient(135deg, #9ca3af 0%, #d1d5db 50%, #f3f4f6 100%);
-        color: #1f2937;
-        box-shadow: 0 15px 35px rgba(107, 114, 128, 0.4), 0 5px 15px rgba(107, 114, 128, 0.2);
+        border-color: #6b5b4f;
+        background: linear-gradient(135deg, #a68b5b 0%, #c4a574 50%, #ebe5dc 100%);
+        color: #3d3229;
+        box-shadow: 0 15px 35px rgba(107, 91, 79, 0.4), 0 5px 15px rgba(107, 91, 79, 0.2);
       }
       
       .mister-white-game .game-card {
         aspect-ratio: 1/1;
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(51, 65, 85, 0.9) 100%);
-        padding: 32px 20px;
-        border-radius: 24px;
+        background: #ffffff;
+        padding: 0;
+        border-radius: 16px;
         text-align: center;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        border: 3px solid rgb(51, 65, 85);
-        color: white;
+        transition: all 0.3s ease;
+        border: 1px solid #e8e4df;
+        color: #3d3229;
         position: relative;
         overflow: hidden;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 0 5px 15px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 2px 12px rgba(61, 50, 41, 0.08);
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        justify-content: stretch;
+        align-items: stretch;
+        min-height: 160px;
+      }
+      
+      .mister-white-game .game-card .game-card-emoji {
+        flex: 1;
+        display: flex;
         align-items: center;
-        min-height: 200px;
+        justify-content: center;
+        font-size: 3rem;
+        min-height: 0;
+        padding: 16px 12px 8px;
+        background: linear-gradient(180deg, #faf8f5 0%, #f5f0e8 100%);
       }
       
-      .mister-white-game .game-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(45deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 50%);
-        pointer-events: none;
+      .mister-white-game .game-card .game-card-separator {
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #e0d9cf, transparent);
+        flex-shrink: 0;
       }
       
-      .mister-white-game .game-card::after {
-        content: '';
-        position: absolute;
-        top: 12px;
-        left: 12px;
-        right: 12px;
-        bottom: 12px;
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 18px;
-        pointer-events: none;
+      .mister-white-game .game-card .game-card-name {
+        flex-shrink: 0;
+        font-size: 0.95rem;
+        font-weight: 600;
+        padding: 10px 12px 14px;
+        color: #3d3229;
+        letter-spacing: 0.3px;
+        line-height: 1.2;
+        word-break: break-word;
+        background: #ffffff;
       }
       
-      .mister-white-game .game-card .card-icon {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
-      }
-      
-      .mister-white-game .game-card .player-name {
-        font-size: 1.25rem;
-        font-weight: 700;
-        margin-bottom: 0.75rem;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        letter-spacing: 0.5px;
+      .mister-white-game .game-card .game-card-status {
+        flex-shrink: 0;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #a04a3a;
+        padding-bottom: 8px;
       }
       
       .mister-white-game .game-card.normal {
@@ -870,23 +966,32 @@ export class MisterWhiteGameUI implements GameUI {
       
       .mister-white-game .game-card.votable {
         cursor: pointer;
-        border-color: #ef4444;
-        background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(30, 41, 59, 0.95) 100%);
+        border-color: #c4a574;
+        box-shadow: 0 4px 16px rgba(166, 139, 91, 0.2);
       }
       
       .mister-white-game .game-card.votable:hover {
-        transform: translateY(-8px) scale(1.05);
-        border-color: #dc2626;
-        box-shadow: 0 25px 50px rgba(239, 68, 68, 0.5), 0 15px 25px rgba(239, 68, 68, 0.3);
-        background: linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(30, 41, 59, 0.95) 100%);
+        transform: translateY(-4px);
+        border-color: #a68b5b;
+        box-shadow: 0 8px 24px rgba(166, 139, 91, 0.25);
+        background: #ffffff;
       }
       
       .mister-white-game .game-card.eliminated {
-        opacity: 0.7;
+        opacity: 0.65;
         pointer-events: none;
-        border-color: rgb(107, 114, 128);
-        background: linear-gradient(135deg, rgba(20, 20, 20, 0.9) 0%, rgba(55, 65, 81, 0.8) 100%);
-        filter: grayscale(0.6);
+        border-color: #d4c4a8;
+        background: #f5f0e8;
+        filter: grayscale(0.5);
+      }
+      
+      .mister-white-game .game-card.eliminated .game-card-emoji {
+        background: #ebe5dc;
+      }
+      
+      .mister-white-game .game-card.eliminated .game-card-name {
+        background: #f5f0e8;
+        color: #6b5b4f;
       }
       
       .mister-white-game .setup-card {
@@ -904,15 +1009,67 @@ export class MisterWhiteGameUI implements GameUI {
         cursor: default;
       }
       
-      .mister-white-game .setup-card.configured .card-front {
-        background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
-        border-color: #10b981;
-        box-shadow: 0 15px 35px rgba(16, 185, 129, 0.4), 0 5px 15px rgba(16, 185, 129, 0.2);
+      .mister-white-game .setup-card .card-front.setup-card-face {
+        background: #ffffff;
+        border: 1px solid #e8e4df;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(61, 50, 41, 0.08);
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: stretch;
+        align-items: stretch;
       }
       
-      .mister-white-game .setup-card.free .card-front {
-        background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #0f172a 100%);
-        border-color: rgba(239, 68, 68, 0.6);
+      .mister-white-game .setup-card .card-front.setup-card-face::before,
+      .mister-white-game .setup-card .card-front.setup-card-face::after {
+        display: none;
+      }
+      
+      .mister-white-game .setup-card .card-front .game-card-emoji {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        min-height: 0;
+        padding: 16px 12px 8px;
+        background: linear-gradient(180deg, #faf8f5 0%, #f5f0e8 100%);
+      }
+      
+      .mister-white-game .setup-card .card-front .game-card-separator {
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #e0d9cf, transparent);
+        flex-shrink: 0;
+      }
+      
+      .mister-white-game .setup-card .card-front .game-card-name {
+        flex-shrink: 0;
+        font-size: 0.95rem;
+        font-weight: 600;
+        padding: 10px 12px 14px;
+        color: #3d3229;
+        letter-spacing: 0.3px;
+        line-height: 1.2;
+        word-break: break-word;
+        background: #ffffff;
+      }
+      
+      .mister-white-game .setup-card .card-front .game-card-status {
+        flex-shrink: 0;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #6b8c69;
+        padding-bottom: 8px;
+      }
+      
+      .mister-white-game .setup-card.configured .card-front.setup-card-face {
+        border-color: #6b8c69;
+        box-shadow: 0 2px 12px rgba(107, 140, 105, 0.15);
+      }
+      
+      .mister-white-game .setup-card.configured .card-front .game-card-emoji {
+        background: linear-gradient(180deg, #f0f5ef 0%, #e0ebe0 100%);
       }
       
       .mister-white-game .setup-card.needs-reveal {
@@ -920,13 +1077,12 @@ export class MisterWhiteGameUI implements GameUI {
       }
       
       .mister-white-game .setup-card.needs-reveal:hover {
-        transform: translateY(-8px) scale(1.02);
+        transform: translateY(-4px) scale(1.02);
       }
       
-      .mister-white-game .setup-card.needs-reveal .card-front {
-        background: linear-gradient(135deg, #475569 0%, #64748b 50%, #334155 100%);
-        border-color: #64748b;
-        box-shadow: 0 15px 35px rgba(100, 116, 139, 0.3), 0 5px 15px rgba(100, 116, 139, 0.1);
+      .mister-white-game .setup-card.needs-reveal .card-front.setup-card-face {
+        border-color: #c4a574;
+        box-shadow: 0 4px 16px rgba(166, 139, 91, 0.2);
       }
       
       .mister-white-game .role-reveal {
@@ -955,81 +1111,80 @@ export class MisterWhiteGameUI implements GameUI {
       }
       
       .mister-white-game .role-reveal.civil {
-        background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+        background: linear-gradient(135deg, #7d9b7a 0%, #8fab8c 100%);
         color: white;
-        border-color: #059669;
+        border-color: #6b8c69;
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
       }
       
       .mister-white-game .role-reveal.impostor {
-        background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+        background: linear-gradient(135deg, #b85c4a 0%, #c97a6a 100%);
         color: white;
-        border-color: #dc2626;
+        border-color: #a04a3a;
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
       }
       
       .mister-white-game .role-reveal.ghost-frame {
-        background: linear-gradient(135deg, #9ca3af 0%, #d1d5db 100%);
-        color: #1f2937;
-        border-color: #6b7280;
+        background: linear-gradient(135deg, #c4a574 0%, #ebe5dc 100%);
+        color: #3d3229;
+        border-color: #6b5b4f;
         text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
       }
       
       .mister-white-game .game-card {
         aspect-ratio: 1/1;
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(51, 65, 85, 0.9) 100%);
-        padding: 32px 20px;
-        border-radius: 24px;
+        background: #ffffff;
+        padding: 0;
+        border-radius: 16px;
         text-align: center;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        border: 3px solid rgb(51, 65, 85);
-        color: white;
+        transition: all 0.3s ease;
+        border: 1px solid #e8e4df;
+        color: #3d3229;
         position: relative;
         overflow: hidden;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 0 5px 15px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 2px 12px rgba(61, 50, 41, 0.08);
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        justify-content: stretch;
+        align-items: stretch;
+        min-height: 160px;
+      }
+      
+      .mister-white-game .game-card .game-card-emoji {
+        flex: 1;
+        display: flex;
         align-items: center;
-        min-height: 200px;
+        justify-content: center;
+        font-size: 3rem;
+        min-height: 0;
+        padding: 16px 12px 8px;
+        background: linear-gradient(180deg, #faf8f5 0%, #f5f0e8 100%);
       }
       
-      .mister-white-game .game-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(45deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 50%);
-        pointer-events: none;
+      .mister-white-game .game-card .game-card-separator {
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #e0d9cf, transparent);
+        flex-shrink: 0;
       }
       
-      .mister-white-game .game-card::after {
-        content: '';
-        position: absolute;
-        top: 12px;
-        left: 12px;
-        right: 12px;
-        bottom: 12px;
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 18px;
-        pointer-events: none;
+      .mister-white-game .game-card .game-card-name {
+        flex-shrink: 0;
+        font-size: 0.95rem;
+        font-weight: 600;
+        padding: 10px 12px 14px;
+        color: #3d3229;
+        letter-spacing: 0.3px;
+        line-height: 1.2;
+        word-break: break-word;
+        background: #ffffff;
       }
       
-      .mister-white-game .game-card .card-icon {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
-      }
-      
-      .mister-white-game .game-card .player-name {
-        font-size: 1.25rem;
-        font-weight: 700;
-        margin-bottom: 0.75rem;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        letter-spacing: 0.5px;
+      .mister-white-game .game-card .game-card-status {
+        flex-shrink: 0;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #a04a3a;
+        padding-bottom: 8px;
       }
       
       .mister-white-game .game-card.normal {
@@ -1038,23 +1193,84 @@ export class MisterWhiteGameUI implements GameUI {
       
       .mister-white-game .game-card.votable {
         cursor: pointer;
-        border-color: #ef4444;
-        background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(30, 41, 59, 0.95) 100%);
+        border-color: #c4a574;
+        box-shadow: 0 4px 16px rgba(166, 139, 91, 0.2);
       }
       
       .mister-white-game .game-card.votable:hover {
-        transform: translateY(-8px) scale(1.05);
-        border-color: #dc2626;
-        box-shadow: 0 25px 50px rgba(239, 68, 68, 0.5), 0 15px 25px rgba(239, 68, 68, 0.3);
-        background: linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(30, 41, 59, 0.95) 100%);
+        transform: translateY(-4px);
+        border-color: #a68b5b;
+        box-shadow: 0 8px 24px rgba(166, 139, 91, 0.25);
+        background: #ffffff;
       }
       
       .mister-white-game .game-card.eliminated {
-        opacity: 0.7;
+        opacity: 0.65;
         pointer-events: none;
-        border-color: rgb(107, 114, 128);
-        background: linear-gradient(135deg, rgba(20, 20, 20, 0.9) 0%, rgba(55, 65, 81, 0.8) 100%);
-        filter: grayscale(0.6);
+        border-color: #d4c4a8;
+        background: #f5f0e8;
+        filter: grayscale(0.5);
+      }
+      
+      .mister-white-game .game-card.eliminated .game-card-emoji {
+        background: #ebe5dc;
+      }
+      
+      .mister-white-game .game-card.eliminated .game-card-name {
+        background: #f5f0e8;
+        color: #6b5b4f;
+      }
+
+      .mister-white-game .camera-flash {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,248,230,0.85) 12%, rgba(255,230,180,0.35) 38%, transparent 68%);
+        opacity: 0;
+        pointer-events: none;
+        mix-blend-mode: screen;
+      }
+
+      .mister-white-game .camera-flash::before,
+      .mister-white-game .camera-flash::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.95), transparent);
+        transform: translate(-50%, -50%);
+      }
+
+      .mister-white-game .camera-flash::before {
+        width: 220%;
+        height: 3px;
+      }
+
+      .mister-white-game .camera-flash::after {
+        width: 3px;
+        height: 220%;
+        background: linear-gradient(180deg, transparent, rgba(255,255,255,0.95), transparent);
+      }
+
+      .mister-white-game .camera-flash.active {
+        animation: cameraFlashPop 0.35s ease-out forwards;
+      }
+
+      @keyframes cameraFlashPop {
+        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.15); }
+        10% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        100% { opacity: 0; transform: translate(-50%, -50%) scale(1.7); }
+      }
+
+      #screen-flash.screen-flash-active {
+        animation: screenFlashBurst 0.45s ease-out forwards;
+      }
+
+      @keyframes screenFlashBurst {
+        0% { opacity: 0; }
+        8% { opacity: 0.3; }
+        30% { opacity: 0; }
+        100% { opacity: 0; }
       }
     `
     
@@ -1066,6 +1282,7 @@ export class MisterWhiteGameUI implements GameUI {
   private startLoadingAnimation(screen: HTMLElement): void {
     const progressBar = screen.querySelector('#loading-progress') as HTMLElement
     let progress = 0
+    const flashInterval = this.startCameraFlashAnimation(screen)
     
     const interval = setInterval(() => {
       progress += 2
@@ -1073,32 +1290,321 @@ export class MisterWhiteGameUI implements GameUI {
       
       if (progress >= 100) {
         clearInterval(interval)
-        // Transition automatique après le chargement
+        clearInterval(flashInterval)
         setTimeout(() => {
           this.dispatchGameAction({ type: 'FINISH_LOADING' })
         }, 500)
       }
-    }, 100) // 5 secondes au total
+    }, 100)
+  }
+
+  private startCameraFlashAnimation(screen: HTMLElement): ReturnType<typeof setInterval> {
+    const flashesContainer = screen.querySelector('#loading-flashes') as HTMLElement
+    const screenFlash = screen.querySelector('#screen-flash') as HTMLElement
+
+    const triggerFlash = () => {
+      const flash = document.createElement('div')
+      flash.className = 'camera-flash'
+      const size = 50 + Math.random() * 90
+      flash.style.top = `${8 + Math.random() * 84}%`
+      flash.style.left = `${8 + Math.random() * 84}%`
+      flash.style.width = `${size}px`
+      flash.style.height = `${size}px`
+      flashesContainer.appendChild(flash)
+
+      requestAnimationFrame(() => flash.classList.add('active'))
+
+      if (Math.random() < 0.22 && screenFlash) {
+        screenFlash.classList.remove('screen-flash-active')
+        void screenFlash.offsetWidth
+        screenFlash.classList.add('screen-flash-active')
+      }
+
+      setTimeout(() => flash.remove(), 400)
+    }
+
+    triggerFlash()
+
+    return setInterval(() => {
+      triggerFlash()
+      if (Math.random() < 0.45) {
+        setTimeout(triggerFlash, 60 + Math.random() * 120)
+      }
+    }, 280 + Math.random() * 420)
   }
   
+  private attachHomeEventListeners(screen: HTMLElement): void {
+    const startBtn = screen.querySelector('#start-game-btn')
+    const rulesBtn = screen.querySelector('#show-rules-btn')
+    const shareBtn = screen.querySelector('#share-game-btn')
+
+    startBtn?.addEventListener('click', () => {
+      this.dispatchGameAction({ type: 'START_FROM_RULES' })
+    })
+    rulesBtn?.addEventListener('click', () => {
+      this.dispatchGameAction({ type: 'SHOW_RULES' })
+    })
+    shareBtn?.addEventListener('click', () => {
+      this.showShareModal()
+    })
+  }
+
   private attachRulesEventListeners(screen: HTMLElement): void {
     const startBtn = screen.querySelector('#start-from-rules-btn')
-    
+    const extendedRulesBtn = screen.querySelector('#extended-rules-btn')
+    const backBtn = screen.querySelector('#back-to-home-btn')
+
     if (startBtn) {
       startBtn.addEventListener('click', () => {
         this.dispatchGameAction({ type: 'START_FROM_RULES' })
       })
     }
+    if (backBtn) {
+      backBtn.addEventListener('click', () => {
+        this.dispatchGameAction({ type: 'BACK_TO_HOME' })
+      })
+    }
+    if (extendedRulesBtn) {
+      extendedRulesBtn.addEventListener('click', () => {
+        this.showExtendedRulesModal()
+      })
+    }
+  }
+
+  private showShareModal(): void {
+    const appUrl = 'https://misswhite-fbb6f.web.app'
+
+    const modal = document.createElement('div')
+    modal.className = 'fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4'
+    modal.setAttribute('role', 'dialog')
+    modal.setAttribute('aria-label', 'Partager le jeu')
+    modal.innerHTML = `
+      <div class="bg-gradient-to-br from-beige-200 to-beige-300 rounded-2xl shadow-2xl border-2 border-beige-400 max-w-sm w-full p-6 text-center">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-beige-900">Partager le jeu</h2>
+          <button id="close-share-btn" type="button" class="text-beige-700 hover:text-beige-900 text-2xl leading-none w-8 h-8 flex items-center justify-center" aria-label="Fermer">×</button>
+        </div>
+        <p class="text-beige-700 text-sm mb-4">Invitez vos amis à rejoindre Ghost Frame</p>
+        <button type="button" id="share-link-btn" class="w-full mb-4 py-3 px-4 bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold rounded-xl transition-colors">
+          Copier / Partager le lien
+        </button>
+        <div class="flex justify-center mb-2">
+          <div class="bg-beige-50 p-3 rounded-xl border border-beige-200">
+            <canvas id="qr-canvas" width="150" height="150"></canvas>
+          </div>
+        </div>
+        <p class="text-beige-600 text-xs">Scannez le QR code pour ouvrir l'app</p>
+      </div>
+    `
+
+    const closeModal = () => modal.remove()
+    modal.querySelector('#close-share-btn')?.addEventListener('click', closeModal)
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal()
+    })
+
+    const shareLinkBtn = modal.querySelector('#share-link-btn')
+    shareLinkBtn?.addEventListener('click', async () => {
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            url: appUrl,
+            title: 'Ghost Frame',
+            text: 'Rejoins la partie Ghost Frame – jeu de déduction et de bluff !'
+          })
+          const btn = shareLinkBtn as HTMLButtonElement
+          const orig = btn.textContent
+          btn.textContent = 'Partagé !'
+          setTimeout(() => { btn.textContent = orig }, 2000)
+        } else {
+          await navigator.clipboard.writeText(appUrl)
+          const btn = shareLinkBtn as HTMLButtonElement
+          const orig = btn.textContent
+          btn.textContent = 'Lien copié !'
+          setTimeout(() => { btn.textContent = orig }, 2000)
+        }
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          try {
+            await navigator.clipboard.writeText(appUrl)
+            const btn = shareLinkBtn as HTMLButtonElement
+            const orig = btn.textContent
+            btn.textContent = 'Lien copié !'
+            setTimeout(() => { btn.textContent = orig }, 2000)
+          } catch {
+            alert('Lien : ' + appUrl)
+          }
+        }
+      }
+    })
+
+    document.body.appendChild(modal)
+    this.generateShareQRCode(modal)
+  }
+  
+  /**
+   * Règles étendues en mode « livre » : un écran à la fois, navigation Précédent / Suivant, pas d'animation, images grandes.
+   */
+  private showExtendedRulesModal(): void {
+    const PAGES: { title: string; content: string }[] = [
+      {
+        title: '1. L\'histoire',
+        content: `
+          <p class="text-beige-800 leading-relaxed mb-4">
+            Cette nuit, quelque chose d'extraordinaire s'est produit. Tous les paparazzis de la ville ont convergé vers le même endroit au même moment. Les flashs ont crépité ; chacun a mitraillé la scène, espérant LA photo qui fera la une.
+          </p>
+          <p class="text-beige-800 leading-relaxed mb-4">
+            À l'aube, vous voilà réunis au QG de l'agence. Le rédacteur en chef veut savoir : qui a vraiment capturé le bon moment ? Tout le monde prétend avoir la photo parfaite. Mais les <strong class="text-beige-900">Experts</strong> ont capturé LA vraie scène. Les <strong class="text-beige-900">Novices</strong> ont une photo différente – proche, mais pas la bonne. Les <strong class="text-beige-900">Fantômes</strong> n'ont pas réussi à prendre de photo : leur carte SD est vide, mais ils ne peuvent pas l'avouer – leur crédibilité en dépend.
+          </p>
+          <p class="text-beige-800 leading-relaxed">
+            Dans cette salle de rédaction, chacun va décrire sa photo sans la montrer. Repérez qui bluffe, qui s'est planté, et qui ment. Car publier la mauvaise photo, c'est la fin de votre carrière.
+          </p>
+        `
+      },
+      {
+        title: '2. Rôle Expert',
+        content: `
+          <div class="flex flex-col items-center mb-6">
+            <img src="/Expert.png" alt="Expert" class="w-56 h-56 object-contain rounded-xl border-2 border-beige-300 mb-4" />
+            <h3 class="text-xl font-bold text-beige-900 mb-2">Expert</h3>
+          </div>
+          <p class="text-beige-800 leading-relaxed">
+            Vous étiez au bon endroit au bon moment. Vous avez capturé <strong class="text-beige-900">LA vraie scène</strong>. Repérez les Novices et le Fantôme, et prouvez votre légitimité aux autres Experts.
+          </p>
+        `
+      },
+      {
+        title: '3. Rôle Novice',
+        content: `
+          <div class="flex flex-col items-center mb-6">
+            <img src="/Novice.png" alt="Novice" class="w-56 h-56 object-contain rounded-xl border-2 border-beige-300 mb-4" />
+            <h3 class="text-xl font-bold text-beige-900 mb-2">Novice</h3>
+          </div>
+          <p class="text-beige-800 leading-relaxed">
+            Votre photo montre une scène différente – proche, mais pas la bonne. Fondez-vous dans la masse, restez vague, faites croire que vous décrivez la même scène.
+          </p>
+        `
+      },
+      {
+        title: '4. Rôle Fantôme',
+        content: `
+          <div class="flex flex-col items-center mb-6">
+            <img src="/Fantome.png" alt="Fantôme" class="w-56 h-56 object-contain rounded-xl border-2 border-beige-300 mb-4" />
+            <h3 class="text-xl font-bold text-beige-900 mb-2">Fantôme</h3>
+          </div>
+          <p class="text-beige-800 leading-relaxed">
+            Votre carte SD est vide – pas de photo. Survivez en improvisant : écoutez les descriptions, déduisez le thème, et ne laissez rien paraître.
+          </p>
+        `
+      },
+      {
+        title: '5. Déroulement',
+        content: `
+          <ul class="text-beige-800 space-y-3 list-disc list-inside leading-relaxed">
+            <li><strong class="text-beige-900">Configuration</strong> : nombre de joueurs, paire de photos (choix dans le dossier images).</li>
+            <li><strong class="text-beige-900">Setup</strong> : chaque joueur reçoit sa « photo » (rôle et image, ou rien pour le Fantôme).</li>
+            <li><strong class="text-beige-900">Discussion</strong> : tour de parole (un mot chacun), puis échange libre – décrivez sans montrer.</li>
+            <li><strong class="text-beige-900">Vote</strong> : qui n'a pas la bonne photo ? Désignation puis révélation simultanée.</li>
+            <li><strong class="text-beige-900">Élimination</strong> : le joueur éliminé est dévoilé. Si c'est le Fantôme, il peut tenter de deviner le mot secret des Experts (validation collective).</li>
+            <li>On enchaîne votes et éliminations jusqu'à ce qu'une condition de victoire soit atteinte.</li>
+          </ul>
+        `
+      },
+      {
+        title: '6. Conditions de victoire',
+        content: `
+          <ul class="text-beige-800 space-y-3 list-disc list-inside leading-relaxed">
+            <li><strong class="text-beige-900">Victoire du Fantôme</strong> : rester en vie avec exactement 1 autre joueur, OU être éliminé et deviner correctement le mot secret (validé par les joueurs).</li>
+            <li><strong class="text-beige-900">Victoire des Experts</strong> : éliminer le Fantôme et l'empêcher de deviner le mot secret.</li>
+            <li><strong class="text-beige-900">Victoire des Novices</strong> : tous les Experts sont éliminés et le Fantôme aussi.</li>
+          </ul>
+        `
+      }
+    ]
+
+    let currentPage = 0
+    const modal = document.createElement('div')
+    modal.className = 'fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4'
+    modal.setAttribute('role', 'dialog')
+    modal.setAttribute('aria-label', 'Règles étendues')
+    modal.innerHTML = `
+      <div class="bg-gradient-to-br from-beige-200 to-beige-300 rounded-2xl shadow-2xl border-2 border-beige-400 max-w-lg w-full max-h-[90vh] flex flex-col">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-beige-400 rounded-t-2xl bg-beige-200/95">
+          <h2 class="text-lg font-bold text-beige-900" id="extended-rules-title">${PAGES[0].title}</h2>
+          <button id="close-extended-rules-btn" type="button" class="text-beige-700 hover:text-beige-900 text-2xl leading-none w-8 h-8 flex items-center justify-center" aria-label="Fermer">×</button>
+        </div>
+        <div class="p-6 overflow-y-auto flex-1 min-h-0" id="extended-rules-content">
+          ${PAGES[0].content}
+        </div>
+        <div class="px-6 pb-6 pt-2 flex gap-3 border-t border-beige-400">
+          <button id="extended-rules-prev" type="button" class="flex-1 py-3 px-4 bg-beige-400 hover:bg-beige-500 text-beige-900 font-semibold rounded-xl transition-colors" style="display:none">← Précédent</button>
+          <button id="extended-rules-next" type="button" class="flex-1 py-3 px-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors">Suivant</button>
+        </div>
+      </div>
+    `
+    document.body.appendChild(modal)
+
+    const titleEl = modal.querySelector('#extended-rules-title') as HTMLElement
+    const contentEl = modal.querySelector('#extended-rules-content') as HTMLElement
+    const prevBtn = modal.querySelector('#extended-rules-prev') as HTMLButtonElement
+    const nextBtn = modal.querySelector('#extended-rules-next') as HTMLButtonElement
+
+    const renderPage = (index: number) => {
+      currentPage = index
+      const page = PAGES[index]
+      titleEl.textContent = page.title
+      contentEl.innerHTML = page.content
+      prevBtn.style.display = index === 0 ? 'none' : 'block'
+      nextBtn.textContent = index === PAGES.length - 1 ? 'Fermer' : 'Suivant'
+    }
+
+    const closeModal = () => {
+      if (modal.parentNode) document.body.removeChild(modal)
+    }
+
+    prevBtn.addEventListener('click', () => {
+      if (currentPage > 0) renderPage(currentPage - 1)
+    })
+    nextBtn.addEventListener('click', () => {
+      if (currentPage < PAGES.length - 1) {
+        renderPage(currentPage + 1)
+      } else {
+        closeModal()
+      }
+    })
+    modal.querySelector('#close-extended-rules-btn')?.addEventListener('click', closeModal)
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal()
+    })
   }
   
   private attachConfigEventListeners(screen: HTMLElement): void {
+    const pairSelect = screen.querySelector('#pair-select') as HTMLSelectElement
+    if (pairSelect) {
+      import('@assets/images/imageRegistry').then(({ fetchAllPairs }) => {
+        fetchAllPairs().then((pairs) => {
+          pairSelect.innerHTML = ''
+          if (pairs.length === 0) {
+            pairSelect.innerHTML = '<option value="">Aucune paire (ajoutez public/images-v2/pairs.json et dossiers public/images-v2/paire-XX/)</option>'
+            return
+          }
+          pairs.forEach((p) => {
+            const opt = document.createElement('option')
+            opt.value = `${p.theme}|${p.id}`
+            opt.textContent = p.label
+            pairSelect.appendChild(opt)
+          })
+        }).catch(() => {
+          pairSelect.innerHTML = '<option value="">Erreur chargement</option>'
+        })
+      })
+    }
+
     const validateBtn = screen.querySelector('#validate-config-btn')
-    
     if (validateBtn) {
-      validateBtn.addEventListener('click', () => {
+      validateBtn.addEventListener('click', async () => {
         const playerCount = parseInt((screen.querySelector('#player-count') as HTMLInputElement).value)
-        const mode = (screen.querySelector('#mode-select') as HTMLSelectElement).value
-        const theme = (screen.querySelector('#theme-select') as HTMLSelectElement).value
+        const pairValue = (screen.querySelector('#pair-select') as HTMLSelectElement).value
         const difficulty = (screen.querySelector('#difficulty-select') as HTMLSelectElement).value
         const rounds = parseInt((screen.querySelector('#rounds-select') as HTMLSelectElement).value)
         
@@ -1106,10 +1612,24 @@ export class MisterWhiteGameUI implements GameUI {
           alert('Le nombre de joueurs doit être entre 3 et 10!')
           return
         }
-        
+        if (!pairValue) {
+          alert('Choisissez une paire de photos dans le dossier images.')
+          return
+        }
+        const [theme, pairId] = pairValue.split('|')
+        validateBtn.setAttribute('disabled', 'true')
+        ;(validateBtn as HTMLButtonElement).textContent = 'Chargement…'
+        const { getImagePairsForRounds } = await import('@assets/images/imageRegistry')
+        const imagesByRound = await getImagePairsForRounds(theme, pairId, rounds)
+        validateBtn.removeAttribute('disabled')
+        ;(validateBtn as HTMLButtonElement).textContent = 'Créer les cartes →'
+        if (!imagesByRound.length) {
+          alert('Impossible de charger les paires. Vérifiez public/images-v2/' + pairId + '/')
+          return
+        }
         this.dispatchGameAction({
           type: 'SET_CONFIG',
-          data: { playerCount, mode, theme, difficulty, rounds }
+          data: { playerCount, selectedPairKey: pairValue, difficulty, rounds, imagesByRound }
         })
       })
     }
@@ -1144,63 +1664,105 @@ export class MisterWhiteGameUI implements GameUI {
   }
   
   private showCardConfigModal(cardIndex: number, role: string, state: any): void {
-    // Créer le modal
+    // Logs : ouverture d'une carte (pour debug chargement images)
+    const currentImages = state.gameData?.currentImages
+    const imageUrl = role === 'civil' ? currentImages?.civil : role === 'impostor' ? currentImages?.impostor : null
+    const hasImageRole = role === 'civil' || role === 'impostor'
+    console.log('[Card] Ouverture carte', { cardIndex, role, selectedPairKey: state.config?.selectedPairKey, imageUrl: imageUrl ?? '(fantôme)' })
+    if (!currentImages && role !== 'ghost-frame') {
+      if (!currentImages) {
+        console.warn('[Card] currentImages est null/undefined : les images n’ont pas été chargées au SET_CONFIG (vérifier le thème et pairs.json)')
+      } else if (!imageUrl) {
+        console.warn('[Card] URL image vide pour le rôle', role)
+      }
+    }
+
     const modal = document.createElement('div')
-    modal.className = 'fixed inset-0 bg-black/75 flex items-center justify-center z-50'
-    
-    const content = this.getRoleContent(role as any, state)
     const player = state.players[cardIndex]
     const hasExistingName = player.name && player.name.trim() !== ''
-    const isNewRound = hasExistingName && !player.cardConfigured  // Nouvelle manche
-    
-    modal.innerHTML = `
-      <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700 max-w-md mx-4">
-        <div class="text-center mb-6">
-          ${isNewRound ? `
-            <div class="bg-yellow-500/20 border border-yellow-500 rounded-xl p-3 mb-4">
-              <div class="text-yellow-300 font-semibold">🔄 Nouvelle manche</div>
-              <div class="text-white text-lg font-bold mt-1">${player.name}</div>
-              <div class="text-gray-300 text-sm">Score actuel : ${player.score || 0} pts</div>
-            </div>
-          ` : ''}
-          ${content.display}
-          <h3 class="text-xl font-bold text-white mb-2">${isNewRound ? 'Votre nouveau rôle' : 'Configuration de votre carte'}</h3>
-          ${content.description}
-        </div>
-        
-        <div class="space-y-4">
-          ${!isNewRound ? `
-            <div>
-              <label class="block text-gray-300 text-sm font-semibold mb-2">Votre prénom :</label>
-              <input 
-                type="text" 
-                id="player-name-input"
-                class="w-full px-4 py-3 bg-slate-700/60 border-2 border-slate-600 text-white rounded-xl text-lg focus:outline-none focus:border-red-500 transition-all"
-                placeholder="Entrez votre prénom..."
-                maxlength="20"
-              >
-            </div>
-          ` : `
-            <input type="hidden" id="player-name-input" value="${player.name}">
-          `}
-          
-          <div class="flex space-x-3">
-            <button 
-              id="confirm-card-btn"
-              class="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 px-6 rounded-xl transition-all"
-            >
-              ✅ ${isNewRound ? 'J\'ai vu mon rôle' : 'Valider'}
-            </button>
-            <button 
-              id="cancel-card-btn"
-              class="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-bold py-3 px-6 rounded-xl transition-all"
-            >
-              ❌ Annuler
-            </button>
-          </div>
-        </div>
+    const isNewRound = hasExistingName && !player.cardConfigured
+
+    const newRoundBanner = isNewRound ? `
+      <div class="bg-warning-100 border border-warning-500 rounded-xl p-3 mb-3">
+        <div class="text-warning-700 font-semibold">🔄 Nouvelle manche</div>
+        <div class="text-beige-900 text-lg font-bold mt-1">${player.name}</div>
+        <div class="text-beige-700 text-sm">Score actuel : ${player.score || 0} pts</div>
+      </div>
+    ` : ''
+
+    const nameInputBlock = !isNewRound ? `
+      <div>
+        <label class="block text-beige-800 text-sm font-semibold mb-2">Votre prénom :</label>
+        <input 
+          type="text" 
+          id="player-name-input"
+          class="w-full px-4 py-3 bg-beige-100 border-2 border-beige-400 text-beige-900 rounded-xl text-lg focus:outline-none focus:border-primary-500 transition-all"
+          placeholder="Entrez votre prénom..."
+          maxlength="20"
+        >
+      </div>
+    ` : `
+      <input type="hidden" id="player-name-input" value="${player.name}">
+    `
+
+    const actionButtons = `
+      <div class="flex space-x-3">
+        <button 
+          id="confirm-card-btn"
+          class="flex-1 bg-gradient-to-r from-success-500 to-success-600 hover:from-success-600 hover:to-success-700 text-white font-bold py-3 px-6 rounded-xl transition-all"
+        >
+          ✅ ${isNewRound ? 'J\'ai vu mon rôle' : 'Valider'}
+        </button>
+        <button 
+          id="cancel-card-btn"
+          class="flex-1 bg-gradient-to-r from-beige-500 to-beige-600 hover:from-beige-600 hover:to-beige-700 text-white font-bold py-3 px-6 rounded-xl transition-all"
+        >
+          ❌ Annuler
+        </button>
       </div>
     `
+
+    if (hasImageRole) {
+      modal.className = 'fixed inset-0 bg-black/95 z-50 flex flex-col'
+      modal.innerHTML = `
+        <div class="flex-1 flex items-center justify-center p-4 min-h-0 overflow-hidden">
+          <img
+            id="role-image-preview"
+            src="${imageUrl || ''}"
+            alt="Votre image"
+            class="max-w-[95vw] max-h-[calc(100vh-220px)] w-auto h-auto object-contain rounded-xl shadow-2xl"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'; console.warn('[Card] Échec chargement image:', this.src)"
+          >
+          <div class="hidden flex-col items-center justify-center p-8 text-white min-h-[200px]">
+            <div class="text-6xl mb-4">🖼️</div>
+            <p class="text-lg">Image non disponible</p>
+          </div>
+        </div>
+        <div class="flex-shrink-0 bg-beige-200 border-t border-beige-400 p-4 space-y-3">
+          ${newRoundBanner}
+          <p class="text-beige-800 text-sm text-center">Mémorisez votre image !</p>
+          ${nameInputBlock}
+          ${actionButtons}
+        </div>
+      `
+    } else {
+      const content = this.getRoleContent(role as any, state)
+      modal.className = 'fixed inset-0 bg-black/75 flex items-center justify-center z-50'
+      modal.innerHTML = `
+        <div class="bg-beige-200 rounded-2xl p-6 border border-beige-400 max-w-md mx-4">
+          <div class="text-center mb-6">
+            ${newRoundBanner}
+            ${content.display}
+            <h3 class="text-xl font-bold text-beige-900 mb-2">${isNewRound ? 'Votre nouveau rôle' : 'Configuration de votre carte'}</h3>
+            ${content.description}
+          </div>
+          <div class="space-y-4">
+            ${nameInputBlock}
+            ${actionButtons}
+          </div>
+        </div>
+      `
+    }
     
     document.body.appendChild(modal)
     
@@ -1210,11 +1772,14 @@ export class MisterWhiteGameUI implements GameUI {
       nameInput.focus()
     }
     
-    // Event listener pour agrandir l'image (mode image uniquement)
+    // Event listener logs chargement image
     const roleImage = modal.querySelector('#role-image-preview') as HTMLImageElement
-    if (roleImage && state.config.mode === 'image') {
-      roleImage.addEventListener('click', () => {
-        this.showEnlargedImage(roleImage.src, role as any)
+    if (roleImage) {
+      roleImage.addEventListener('load', () => {
+        console.log('[Card] Image chargée avec succès:', roleImage.src)
+      })
+      roleImage.addEventListener('error', () => {
+        console.warn('[Card] Échec chargement image (event error) — URL:', roleImage.src, '— Vérifier que le fichier existe dans public/images-v2/paire-XX/')
       })
     }
     
@@ -1262,79 +1827,11 @@ export class MisterWhiteGameUI implements GameUI {
       if (e.key === 'Enter') handleConfirm()
     })
     
-    // Fermer en cliquant à l'extérieur
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) handleCancel()
-    })
-  }
-
-  /**
-   * Affiche l'image de rôle en grand dans un modal dédié
-   */
-  private showEnlargedImage(imageUrl: string, role: MisterWhiteRole): void {
-    const modal = document.createElement('div')
-    modal.className = 'fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-[60] p-4'
-    
-    modal.innerHTML = `
-      <div class="relative max-w-4xl max-h-4xl w-full h-full flex items-center justify-center">
-        <!-- Bouton fermer -->
-        <button id="close-enlarged-btn" class="absolute top-4 right-4 z-10 w-12 h-12 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center text-xl font-bold transition-colors">
-          ✕
-        </button>
-        
-        <!-- Image agrandie -->
-        <div class="bg-white/10 rounded-2xl p-4 backdrop-blur-sm border border-white/20">
-          <img 
-            src="${imageUrl}" 
-            alt="Image ${this.getRoleLabel(role)}" 
-            class="max-w-full max-h-[80vh] w-auto h-auto object-contain rounded-xl shadow-2xl"
-            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
-          >
-          <div class="hidden flex-col items-center justify-center p-8 text-white">
-            <div class="text-6xl mb-4">🖼️</div>
-            <p class="text-lg">Image non disponible</p>
-          </div>
-        </div>
-        
-        <!-- Info sur le rôle -->
-        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-lg backdrop-blur-sm">
-          <span class="font-semibold">${this.getRoleLabel(role)}</span>
-        </div>
-        
-        <!-- Instruction -->
-        <div class="absolute top-4 left-4 bg-black/50 text-white px-3 py-2 rounded-lg text-sm backdrop-blur-sm">
-          Cliquez n'importe où pour fermer
-        </div>
-      </div>
-    `
-    
-    document.body.appendChild(modal)
-    
-    // Event listeners pour fermer le modal
-    const closeBtn = modal.querySelector('#close-enlarged-btn')
-    
-    const handleClose = () => {
-      document.body.removeChild(modal)
+    if (!hasImageRole) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) handleCancel()
+      })
     }
-    
-    closeBtn?.addEventListener('click', handleClose)
-    
-    // Fermer en cliquant n'importe où
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal || e.target === modal.firstElementChild) {
-        handleClose()
-      }
-    })
-    
-    // Fermer avec la touche Échap
-    const handleKeydown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        handleClose()
-        document.removeEventListener('keydown', handleKeydown)
-      }
-    }
-    
-    document.addEventListener('keydown', handleKeydown)
   }
 
   /**
@@ -1347,22 +1844,22 @@ export class MisterWhiteGameUI implements GameUI {
     modal.className = 'fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm flex items-center justify-center z-50 p-4'
     
     modal.innerHTML = `
-      <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border-2 border-red-500/30 max-w-sm w-full mx-4 animate-scale-in">
+      <div class="bg-gradient-to-br from-beige-200 to-beige-300 rounded-2xl shadow-2xl border-2 border-error-500/30 max-w-sm w-full mx-4 animate-scale-in">
         <!-- Header -->
-        <div class="bg-gradient-to-r from-red-600 to-red-700 text-white p-6 rounded-t-2xl text-center">
+        <div class="bg-gradient-to-r from-error-600 to-error-700 text-white p-6 rounded-t-2xl text-center">
           <div class="text-4xl mb-3">⚠️</div>
           <h3 class="text-xl font-bold">Confirmation d'élimination</h3>
         </div>
         
         <!-- Content -->
         <div class="p-6 text-center">
-          <p class="text-gray-300 mb-4 leading-relaxed">
+          <p class="text-beige-800 mb-4 leading-relaxed">
             Voulez-vous vraiment éliminer
           </p>
-          <div class="bg-slate-700/50 rounded-lg p-3 mb-4 border border-slate-600">
-            <span class="text-white font-bold text-lg">${playerName}</span>
+          <div class="bg-beige-100 rounded-lg p-3 mb-4 border border-beige-400">
+            <span class="text-beige-900 font-bold text-lg">${playerName}</span>
           </div>
-          <p class="text-yellow-300 text-sm font-medium">
+          <p class="text-warning-700 text-sm font-medium">
             ⚠️ Cette action révélera son rôle à tout le monde !
           </p>
         </div>
@@ -1370,10 +1867,10 @@ export class MisterWhiteGameUI implements GameUI {
         <!-- Actions -->
         <div class="p-6 pt-0">
           <div class="grid grid-cols-2 gap-3">
-            <button id="cancel-elimination-btn" class="bg-slate-600 hover:bg-slate-500 text-white font-bold py-4 px-4 rounded-xl transition-colors touch-manipulation">
+            <button id="cancel-elimination-btn" class="bg-beige-600 hover:bg-beige-500 text-white font-bold py-4 px-4 rounded-xl transition-colors touch-manipulation">
               Annuler
             </button>
-            <button id="confirm-elimination-btn" class="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold py-4 px-4 rounded-xl transition-all transform hover:scale-105 touch-manipulation">
+            <button id="confirm-elimination-btn" class="bg-gradient-to-r from-error-600 to-error-700 hover:from-error-700 hover:to-error-800 text-white font-bold py-4 px-4 rounded-xl transition-all transform hover:scale-105 touch-manipulation">
               Éliminer
             </button>
           </div>
@@ -1556,56 +2053,24 @@ export class MisterWhiteGameUI implements GameUI {
   
   // --- Utilitaires ---
   
-  private getRoleEmoji(role: MisterWhiteRole, emojis: EmojiPair): string {
+  private getRoleImageUrl(role: MisterWhiteRole): string {
     switch (role) {
-      case 'civil': return emojis.civil
-      case 'impostor': return emojis.impostor
-      case 'ghost-frame': return '❓'
+      case 'civil': return '/Expert.png'
+      case 'impostor': return '/Novice.png'
+      case 'ghost-frame': return '/Fantome.png'
     }
   }
   
   private getRoleContent(role: MisterWhiteRole, state: any): { display: string, description: string } {
-    if (role === 'ghost-frame') {
-      return {
-        display: '<div class="text-6xl mb-4">👤</div>',
-        description: `
-          <div class="bg-gray-500 text-white inline-block px-4 py-2 rounded-lg font-semibold mb-4">
-            GHOST FRAME
-          </div>
-          <div class="text-gray-300 text-sm">Vous ne voyez rien - soyez malin !</div>
-        `
-      }
-    }
-    
-    if (state.config.mode === 'emoji') {
-      const emoji = this.getRoleEmoji(role, state.gameData.currentEmojis!)
-      return {
-        display: `<div class="text-6xl mb-4">${emoji}</div>`,
-        description: `
-          <div class="text-gray-300 text-sm">Votre emoji : ${emoji}</div>
-          <div class="text-gray-400 text-xs mt-2">Mémorisez-le bien !</div>
-        `
-      }
-    } else {
-      // Mode image
-      const imageUrl = role === 'civil' 
-        ? state.gameData.currentImages?.civil 
-        : state.gameData.currentImages?.impostor
-      
-      return {
-        display: `
-          <div class="mb-4">
-            <img id="role-image-preview" src="${imageUrl}" alt="Votre image" class="w-32 h-32 object-cover rounded-xl mx-auto border-4 border-white/20 cursor-pointer hover:border-blue-400 transition-colors" 
-                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block'"
-                 title="Cliquez pour agrandir">
-            <div class="text-6xl" style="display:none">🖼️</div>
-          </div>
-        `,
-        description: `
-          <div class="text-gray-300 text-sm">Votre image de ${role === 'civil' ? 'civil' : 'imposteur'}</div>
-          <div class="text-gray-400 text-xs mt-2">Mémorisez-la bien ! <span class="text-blue-300">Cliquez sur l'image pour l'agrandir</span></div>
-        `
-      }
+    return {
+      display: `
+        <div class="mb-4">
+          <img src="/Fantome.png" alt="Fantôme" class="w-32 h-32 object-contain mx-auto rounded-xl border-2 border-beige-300" />
+        </div>
+      `,
+      description: `
+        <div class="text-beige-800 text-sm">Vous ne voyez rien - soyez malin !</div>
+      `
     }
   }
   
@@ -1626,34 +2091,77 @@ export class MisterWhiteGameUI implements GameUI {
         const elimPoints = elimIndex === -1 ? state.gameData.eliminationHistory.length : elimIndex
         const bonusPoints = state.gameData.guessPhase.isCorrect ? 2 : 0
         pointsExplanation = `pts (${elimPoints} élim${bonusPoints > 0 ? ' + ' + bonusPoints + ' bonus' : ''})`
-      } else if (player.role === 'civil') {
-        pointsExplanation = isWinner ? `pts (${totalImpostors} imposteur${totalImpostors > 1 ? 's' : ''})` : 'pts (0 si défaite)'
       } else {
-        pointsExplanation = isWinner ? `pts (${totalCivils} civil${totalCivils > 1 ? 's' : ''})` : 'pts (0 si défaite)'
+        pointsExplanation = isWinner ? 'pts (gagnant)' : 'pts (0 si défaite)'
       }
       
       const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '🏅'
       
       return `
-        <div class="flex items-center justify-between p-3 bg-slate-700/40 rounded-lg border border-slate-600">
+        <div class="flex items-center justify-between p-3 bg-beige-200 rounded-lg border border-beige-400">
           <div class="flex items-center">
             <span class="text-2xl mr-3">${medal}</span>
             <div>
-              <div class="font-semibold text-white">${player.name}</div>
-              <div class="role-reveal ${player.role} text-xs px-2 py-1 rounded">
-                ${this.getRoleLabel(player.role!)}
-              </div>
+              <div class="font-semibold text-beige-900">${player.name}</div>
             </div>
           </div>
           <div class="text-right">
-            <div class="text-xl font-bold text-white">${player.score || 0}</div>
-            <div class="text-xs text-gray-400">${pointsExplanation}</div>
+            <div class="text-xl font-bold text-beige-900">${player.score || 0}</div>
+            <div class="text-xs text-beige-600">${pointsExplanation}</div>
           </div>
         </div>
       `
     }).join('')
   }
   
+  private renderRoundImagesRecap(state: MisterWhiteGameState): string {
+    const images = state.gameData.currentImages
+    if (!images?.civil || !images?.impostor) return ''
+
+    return `
+      <div class="bg-beige-200/80 backdrop-blur-sm rounded-2xl p-6 border border-beige-400 mb-8 text-left">
+        <h3 class="text-xl font-bold text-beige-900 mb-2 text-center">🖼️ Récap des images</h3>
+        <p class="text-beige-700 text-sm mb-5 text-center">
+          Les deux photos de la manche — chaque équipe peut enfin voir celle de l'autre.
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div class="bg-beige-100 rounded-xl p-3 border border-beige-300">
+            <div class="flex items-center justify-center gap-2 mb-3">
+              <img src="/Expert.png" alt="Expert" class="w-8 h-8 object-contain rounded" />
+              <span class="font-semibold text-beige-900">Image Experts</span>
+            </div>
+            <img
+              src="${images.civil}"
+              alt="Image Experts"
+              class="w-full max-h-64 object-contain rounded-lg mx-auto bg-black/5"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+            >
+            <div class="hidden flex-col items-center justify-center min-h-[160px] rounded-lg bg-beige-300/50 text-beige-600 text-sm">
+              <span class="text-3xl mb-2">🖼️</span>
+              <span>Image non disponible</span>
+            </div>
+          </div>
+          <div class="bg-beige-100 rounded-xl p-3 border border-beige-300">
+            <div class="flex items-center justify-center gap-2 mb-3">
+              <img src="/Novice.png" alt="Novice" class="w-8 h-8 object-contain rounded" />
+              <span class="font-semibold text-beige-900">Image Novices</span>
+            </div>
+            <img
+              src="${images.impostor}"
+              alt="Image Novices"
+              class="w-full max-h-64 object-contain rounded-lg mx-auto bg-black/5"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+            >
+            <div class="hidden flex-col items-center justify-center min-h-[160px] rounded-lg bg-beige-300/50 text-beige-600 text-sm">
+              <span class="text-3xl mb-2">🖼️</span>
+              <span>Image non disponible</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  }
+
   private getRoleLabel(role: MisterWhiteRole): string {
     switch (role) {
       case 'civil': return 'CIVIL'
@@ -1665,11 +2173,11 @@ export class MisterWhiteGameUI implements GameUI {
   private getWinnerInfo(state: MisterWhiteGameState): { emoji: string, text: string } {
     switch (state.winner?.type) {
       case 'civils':
-        return { emoji: '🎉', text: 'Les Civils ont gagné !' }
+        return { emoji: '🎉', text: 'Les Experts ont gagné !' }
       case 'impostors':
-        return { emoji: '🎭', text: 'Les Imposteurs ont gagné !' }
+        return { emoji: '🎭', text: 'Les Novices ont gagné !' }
       case 'ghost-frame':
-        return { emoji: '👻', text: 'Ghost Frame a gagné !' }
+        return { emoji: '👻', text: 'Le Fantôme a gagné !' }
       default:
         return { emoji: '🎮', text: 'Partie terminée' }
     }
@@ -1709,8 +2217,8 @@ export class MisterWhiteGameUI implements GameUI {
         width: 150,
         margin: 1,
         color: {
-          dark: '#7c3aed', // Violet pour matcher le thème
-          light: '#ffffff'
+          dark: '#5c4d42',
+          light: '#fdfbf7'
         },
         errorCorrectionLevel: 'M'
       })

@@ -7,7 +7,7 @@ export class GuessingGameUI implements GameUI {
     const state = gameState as GuessingGameState
     
     const container = document.createElement('div')
-    container.className = 'game-board bg-white rounded-xl shadow-lg p-6'
+    container.className = 'game-board bg-beige-50 rounded-xl shadow-lg p-6 border border-beige-200'
     
     // En-tête du jeu
     const header = this.renderHeader(state)
@@ -29,10 +29,10 @@ export class GuessingGameUI implements GameUI {
     const state = gameState as GuessingGameState
     
     const container = document.createElement('div')
-    container.className = 'player-actions bg-white rounded-xl shadow-lg p-6'
+    container.className = 'player-actions bg-beige-50 rounded-xl shadow-lg p-6 border border-beige-200'
     
     const title = document.createElement('h3')
-    title.className = 'text-lg font-semibold text-gray-900 mb-4'
+    title.className = 'text-lg font-semibold text-beige-900 mb-4'
     title.textContent = 'Votre action'
     
     const actionsContainer = document.createElement('div')
@@ -40,7 +40,7 @@ export class GuessingGameUI implements GameUI {
     
     if (state.phase === 'setup') {
       actionsContainer.innerHTML = `
-        <p class="text-gray-600 mb-4">Prêt à commencer ?</p>
+        <p class="text-beige-700 mb-4">Prêt à commencer ?</p>
         <button class="btn-primary w-full" data-action='{"type": "START_GAME"}'>
           Commencer la partie
         </button>
@@ -53,8 +53,8 @@ export class GuessingGameUI implements GameUI {
       if (!isPlayerTurn) {
         actionsContainer.innerHTML = `
           <div class="text-center py-4">
-            <p class="text-gray-500 mb-2">En attente de votre tour...</p>
-            <p class="text-sm text-gray-400">
+            <p class="text-beige-600 mb-2">En attente de votre tour...</p>
+            <p class="text-sm text-beige-500">
               Tentatives restantes: ${state.gameData.maxGuesses - playerState.guessCount}
             </p>
           </div>
@@ -63,16 +63,16 @@ export class GuessingGameUI implements GameUI {
         actionsContainer.innerHTML = `
           <div class="text-center py-4">
             <p class="text-error-600 mb-2">Vous avez épuisé vos tentatives</p>
-            <p class="text-sm text-gray-500">En attente des autres joueurs...</p>
+            <p class="text-sm text-beige-600">En attente des autres joueurs...</p>
           </div>
         `
       } else {
         actionsContainer.innerHTML = `
           <div>
-            <p class="text-gray-700 mb-4">
+            <p class="text-beige-800 mb-4">
               Devinez le nombre entre ${state.gameData.range.min} et ${state.gameData.range.max}
             </p>
-            <p class="text-sm text-gray-500 mb-4">
+            <p class="text-sm text-beige-600 mb-4">
               Tentatives restantes: ${state.gameData.maxGuesses - playerState.guessCount}
             </p>
             
@@ -115,7 +115,7 @@ export class GuessingGameUI implements GameUI {
             </h4>
             ${correctGuess ? 
               `<p class="text-success-600">🎉 Trouvé par ${correctGuess.playerName} !</p>` :
-              `<p class="text-gray-600">Personne n'a trouvé le nombre...</p>`
+              `<p class="text-beige-700">Personne n'a trouvé le nombre...</p>`
             }
           </div>
           
@@ -145,10 +145,10 @@ export class GuessingGameUI implements GameUI {
   
   renderScoreboard(players: Player[]): HTMLElement {
     const container = document.createElement('div')
-    container.className = 'scoreboard bg-white rounded-xl shadow-lg p-6'
+    container.className = 'scoreboard bg-beige-50 rounded-xl shadow-lg p-6 border border-beige-200'
     
     const title = document.createElement('h3')
-    title.className = 'text-lg font-semibold text-gray-900 mb-4'
+    title.className = 'text-lg font-semibold text-beige-900 mb-4'
     title.textContent = 'Classement'
     
     const playersList = document.createElement('div')
@@ -159,7 +159,7 @@ export class GuessingGameUI implements GameUI {
     sortedPlayers.forEach((player, index) => {
       const playerItem = document.createElement('div')
       playerItem.className = `flex items-center justify-between p-3 rounded-lg ${
-        index === 0 ? 'bg-yellow-50 border border-yellow-200' : 'bg-gray-50'
+        index === 0 ? 'bg-warning-50 border border-warning-500' : 'bg-beige-100'
       }`
       
       const rankIcon = index === 0 ? '🏆' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`
@@ -167,13 +167,13 @@ export class GuessingGameUI implements GameUI {
       playerItem.innerHTML = `
         <div class="flex items-center">
           <div class="w-10 h-10 rounded-full ${
-            player.connected ? 'bg-success-500' : 'bg-gray-400'
+            player.connected ? 'bg-success-500' : 'bg-beige-400'
           } flex items-center justify-center text-white font-bold mr-3">
             ${rankIcon}
           </div>
           <div>
-            <div class="font-medium text-gray-900">${player.displayName}</div>
-            <div class="text-xs text-gray-500">
+            <div class="font-medium text-beige-900">${player.displayName}</div>
+            <div class="text-xs text-beige-600">
               ${player.connected ? '🟢 En ligne' : '🔴 Hors ligne'}
               ${player.isHost ? ' • 👑 Hôte' : ''}
             </div>
@@ -181,7 +181,7 @@ export class GuessingGameUI implements GameUI {
         </div>
         <div class="text-right">
           <div class="text-lg font-bold ${
-            index === 0 ? 'text-yellow-600' : 'text-gray-900'
+            index === 0 ? 'text-warning-600' : 'text-beige-900'
           }">
             ${player.score} pts
           </div>
@@ -217,8 +217,8 @@ export class GuessingGameUI implements GameUI {
     header.className = 'mb-6'
     
     header.innerHTML = `
-      <h2 class="text-2xl font-bold text-gray-900 mb-2">🎯 Jeu de Devinettes</h2>
-      <div class="flex items-center space-x-4 text-sm text-gray-600">
+      <h2 class="text-2xl font-bold text-beige-900 mb-2">🎯 Jeu de Devinettes</h2>
+      <div class="flex items-center space-x-4 text-sm text-beige-700">
         <span>Manche ${state.currentTurn + 1}</span>
         <span>Phase: ${this.getPhaseLabel(state.phase)}</span>
         <span>Range: ${state.gameData.range.min}-${state.gameData.range.max}</span>
@@ -230,20 +230,20 @@ export class GuessingGameUI implements GameUI {
   
   private renderMainArea(state: GuessingGameState, currentPlayer: Player): HTMLElement {
     const mainArea = document.createElement('div')
-    mainArea.className = 'mb-6 p-6 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border'
+    mainArea.className = 'mb-6 p-6 bg-gradient-to-br from-beige-100 to-beige-200 rounded-lg border border-beige-200'
     
     if (state.phase === 'setup') {
       mainArea.innerHTML = `
         <div class="text-center">
-          <h3 class="text-xl font-semibold text-gray-800 mb-4">
+          <h3 class="text-xl font-semibold text-beige-800 mb-4">
             🎲 Prêt pour le défi ?
           </h3>
-          <p class="text-gray-600 mb-4">
+          <p class="text-beige-700 mb-4">
             Je pense à un nombre entre 1 et 100. À vous de le deviner !
           </p>
-          <div class="bg-white p-4 rounded-lg inline-block">
-            <p class="text-sm text-gray-500">Règles:</p>
-            <ul class="text-sm text-gray-600 text-left mt-2">
+          <div class="bg-beige-50 p-4 rounded-lg inline-block border border-beige-200">
+            <p class="text-sm text-beige-600">Règles:</p>
+            <ul class="text-sm text-beige-700 text-left mt-2">
               <li>• Chaque joueur a ${state.gameData.maxGuesses} tentatives maximum</li>
               <li>• Plus vous trouvez vite, plus vous gagnez de points</li>
               <li>• Je vous dirai si c'est trop haut ou trop bas</li>
@@ -258,16 +258,16 @@ export class GuessingGameUI implements GameUI {
       mainArea.innerHTML = `
         <div class="text-center">
           <div class="mb-4">
-            <div class="inline-flex items-center px-4 py-2 bg-white rounded-full shadow-sm">
-              <div class="w-3 h-3 ${isPlayerTurn ? 'bg-primary-500 animate-pulse' : 'bg-gray-400'} rounded-full mr-2"></div>
-              <span class="font-medium ${isPlayerTurn ? 'text-primary-700' : 'text-gray-600'}">
+            <div class="inline-flex items-center px-4 py-2 bg-beige-50 rounded-full shadow-sm border border-beige-200">
+              <div class="w-3 h-3 ${isPlayerTurn ? 'bg-primary-500 animate-pulse' : 'bg-beige-400'} rounded-full mr-2"></div>
+              <span class="font-medium ${isPlayerTurn ? 'text-primary-700' : 'text-beige-700'}">
                 ${isPlayerTurn ? 'À votre tour !' : `Tour de ${currentPlayerName}`}
               </span>
             </div>
           </div>
           
-          <div class="text-4xl font-bold text-gray-800 mb-2">🤔</div>
-          <p class="text-lg text-gray-700">
+          <div class="text-4xl font-bold text-beige-800 mb-2">🤔</div>
+          <p class="text-lg text-beige-800">
             Quel est le nombre mystère ?
           </p>
           
@@ -282,12 +282,12 @@ export class GuessingGameUI implements GameUI {
           <div class="text-6xl mb-4">
             ${correctGuess ? '🎉' : '😅'}
           </div>
-          <h3 class="text-2xl font-bold text-gray-800 mb-4">
+          <h3 class="text-2xl font-bold text-beige-800 mb-4">
             Le nombre était: ${state.gameData.secretNumber}
           </h3>
           ${correctGuess ? 
             `<p class="text-success-600 text-lg">Bravo ${correctGuess.playerName} !</p>` :
-            `<p class="text-gray-600">Personne n'a trouvé cette fois...</p>`
+            `<p class="text-beige-700">Personne n'a trouvé cette fois...</p>`
           }
         </div>
       `
@@ -298,7 +298,7 @@ export class GuessingGameUI implements GameUI {
   
   private renderHints(state: GuessingGameState): string {
     if (state.gameData.guesses.length === 0) {
-      return '<p class="text-sm text-gray-500 mt-4">Aucune tentative pour le moment</p>'
+      return '<p class="text-sm text-beige-600 mt-4">Aucune tentative pour le moment</p>'
     }
     
     const lastGuess = state.gameData.guesses[state.gameData.guesses.length - 1]
@@ -307,9 +307,9 @@ export class GuessingGameUI implements GameUI {
       `${lastGuess.guess} est trop petit 📉`
     
     return `
-      <div class="mt-4 p-3 bg-white rounded-lg inline-block">
-        <p class="text-sm text-gray-600">Dernier indice:</p>
-        <p class="font-medium text-gray-800">${hintText}</p>
+      <div class="mt-4 p-3 bg-beige-50 rounded-lg inline-block border border-beige-200">
+        <p class="text-sm text-beige-700">Dernier indice:</p>
+        <p class="font-medium text-beige-900">${hintText}</p>
       </div>
     `
   }
@@ -323,7 +323,7 @@ export class GuessingGameUI implements GameUI {
     }
     
     const title = document.createElement('h4')
-    title.className = 'text-sm font-medium text-gray-700 mb-3'
+    title.className = 'text-sm font-medium text-beige-700 mb-3'
     title.textContent = 'Historique des tentatives'
     
     const list = document.createElement('div')

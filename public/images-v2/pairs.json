@@ -1,0 +1,21 @@
+{
+  "pairs": [
+    { "id": "paire-01", "images": ["daft-punk-voiture.jpg", "eminem-cybertruck.jpg"] },
+    { "id": "paire-02", "images": ["shakira-coupe-monde-2060.jpg", "shakira-waka-waka-2010.jpg"] },
+    { "id": "paire-03", "images": ["instagram-selfie-tour-eiffel.jpg", "instagram-realite-tour-eiffel.jpg"] },
+    { "id": "paire-04", "images": ["macron-gilet-jaune.jpg", "macron-zadiste-ukulele.jpg"] },
+    { "id": "paire-05", "images": ["vacances-espagne.jpg", "vacances-bretagne.jpg"] },
+    { "id": "paire-06", "images": ["cafe-paris-instagram.jpg", "cafe-paris-realite.jpg"] },
+    { "id": "paire-07", "images": ["famille-gare-retards.jpg", "famille-gare-a-lheure.jpg"] },
+    { "id": "paire-08", "images": ["jesse-pinkman-desinvolte.jpg", "jesse-pinkman-amorti.jpg"] },
+    { "id": "paire-09", "images": ["chat-maine-coon-mignon.jpg", "chat-moche-sans-poils.jpg"] },
+    { "id": "paire-10", "images": ["reine-elizabeth-elegante.jpg", "reine-elizabeth-jogging.jpg"] },
+    { "id": "paire-11", "images": ["chimpanze-echecs.jpg", "chimpanze-voiture.jpg"] },
+    { "id": "paire-12", "images": ["chien-golden-beau.jpg", "chien-batard-triste.jpg"] },
+    { "id": "paire-13", "images": ["terre-plate-espace.jpg", "terre-ronde-espace.jpg"] },
+    { "id": "paire-14", "images": ["astronaute-lune-1969.jpg", "astronaute-lune-plateau.jpg"] },
+    { "id": "paire-15", "images": ["justin-bieber-16ans.jpg", "justin-bieber-aujourdhui.jpg"] },
+    { "id": "paire-16", "images": ["frigo-range.jpg", "frigo-bazar.jpg"] },
+    { "id": "paire-17", "images": ["curry-lancer-franc.jpg", "curry-dance-fortnite.jpg"] }
+  ]
+}

@@ -7,8 +7,6 @@ import {
   createInitialGameState, 
   validateGameAction,
   distributeRoles,
-  chooseRandomEmojis,
-  chooseRandomImages,
   generateSecretWord,
   shuffleArray
 } from './game.state'
@@ -32,6 +30,12 @@ export class MisterWhiteGameLogic implements GameLogic {
     switch (action.type) {
       case 'FINISH_LOADING':
         return this.processFinishLoading(state)
+
+      case 'SHOW_RULES':
+        return this.processShowRules(state)
+
+      case 'BACK_TO_HOME':
+        return this.processBackToHome(state)
         
       case 'START_FROM_RULES':
         return this.processStartFromRules(state)
@@ -64,7 +68,7 @@ export class MisterWhiteGameLogic implements GameLogic {
         return this.processContinueGame(state)
         
       case 'NEXT_ROUND':
-        return this.processNextRound(state)
+        return this.processNextRound(state, action.data)
         
       case 'NEW_GAME':
         return this.processNewGame(state)
@@ -108,7 +112,17 @@ export class MisterWhiteGameLogic implements GameLogic {
   // --- Méthodes privées pour le nouveau flow ---
   
   private processFinishLoading(state: MisterWhiteGameState): MisterWhiteGameState {
+    state.phase = 'home'
+    return state
+  }
+
+  private processShowRules(state: MisterWhiteGameState): MisterWhiteGameState {
     state.phase = 'rules'
+    return state
+  }
+
+  private processBackToHome(state: MisterWhiteGameState): MisterWhiteGameState {
+    state.phase = 'home'
     return state
   }
   
@@ -119,24 +133,20 @@ export class MisterWhiteGameLogic implements GameLogic {
   
   private processSetConfig(state: MisterWhiteGameState, data: any): MisterWhiteGameState {
     state.config.playerCount = data.playerCount
-    state.config.mode = data.mode || 'emoji'
-    state.config.theme = data.theme || 'libre'
+    state.config.mode = 'image'
+    state.config.selectedPairKey = data.selectedPairKey ?? ''
     state.config.difficulty = data.difficulty || 'medium'
     state.config.rounds = data.rounds || 1
     
     // Préparer la phase de setup (créer slots pour les joueurs)
     state.phase = 'setup'
     
-    // Préparer les données du jeu selon le mode
-    if (state.config.mode === 'emoji') {
-      state.gameData.currentEmojis = chooseRandomEmojis(state.config.theme)
-      state.gameData.currentImages = null
-    } else {
-      state.gameData.currentImages = chooseRandomImages(state.config.theme)
-      state.gameData.currentEmojis = null
-    }
-    
-    state.gameData.guessPhase.secretWord = generateSecretWord(state.config.theme)
+    // Images : une paire par manche (imagesByRound) ou une seule (currentImages)
+    const imagesByRound = data.imagesByRound ?? []
+    state.gameData.imagesByRound = imagesByRound
+    state.gameData.currentImages = data.currentImages ?? (imagesByRound.length > 0 ? imagesByRound[0]! : null)
+    const themeForSecret = state.config.selectedPairKey ? state.config.selectedPairKey.split('|')[0] : 'libre-v2'
+    state.gameData.guessPhase.secretWord = generateSecretWord(themeForSecret)
     
     // IMPORTANT: Réinitialiser toutes les données de la manche
     state.gameData.eliminatedPlayers = []
@@ -148,7 +158,7 @@ export class MisterWhiteGameLogic implements GameLogic {
       isActive: false,
       needsValidation: false,
       validationVotes: {},
-      secretWord: generateSecretWord(state.config.theme)
+      secretWord: generateSecretWord(themeForSecret)
     }
     state.gameData.gamePhase = {
       discussionStarted: false,
@@ -401,7 +411,7 @@ export class MisterWhiteGameLogic implements GameLogic {
     return state
   }
   
-  private processNextRound(state: MisterWhiteGameState): MisterWhiteGameState {
+  private processNextRound(state: MisterWhiteGameState, data?: { currentImages?: import('./game.state').ImagePair | null }): MisterWhiteGameState {
     // Incrémenter la manche
     state.config.currentRound++
     
@@ -411,18 +421,26 @@ export class MisterWhiteGameLogic implements GameLogic {
       score: player.score || 0
     }))
     
-    // Recommencer avec une nouvelle configuration mais les mêmes paramètres
-    const configData = {
+    // Réinitialiser avec la paire prévue pour la manche suivante (imagesByRound)
+    const imagesByRound = state.gameData.imagesByRound ?? []
+    const nextRoundImages = imagesByRound[state.config.currentRound - 1] ?? state.gameData.currentImages
+
+    const configData: any = {
       playerCount: state.config.playerCount,
-      mode: state.config.mode,
-      theme: state.config.theme,
+      mode: 'image',
+      selectedPairKey: state.config.selectedPairKey,
       difficulty: state.config.difficulty,
-      rounds: state.config.rounds
+      rounds: state.config.rounds,
+      imagesByRound,
+      currentImages: nextRoundImages
     }
-    
-    // Réinitialiser et reconfigurer (nouveaux rôles, nouvelles images/emojis)
+
+    // Réinitialiser et reconfigurer (nouveaux rôles, images de la manche)
     const newState = this.processSetConfig(state, configData)
-    
+
+    // Utiliser la paire de la manche courante
+    newState.gameData.currentImages = nextRoundImages
+
     // Restaurer les noms et scores MAIS réinitialiser les cartes
     // Les joueurs devront retourner leurs cartes pour voir leurs nouveaux rôles
     newState.config.playerNames = playerData.map(p => p.name)

@@ -9,8 +9,9 @@ export type MisterWhiteRole = 'civil' | 'impostor' | 'ghost-frame'
  * Les phases du jeu (nouveau flow adapté)
  */
 export type MisterWhitePhase = 
-  | 'loading'        // 1. Écran de chargement avec vidéo
-  | 'rules'          // 2. Écran des règles du jeu
+  | 'loading'        // 1. Écran de chargement
+  | 'home'           // 2. Écran d'accueil
+  | 'rules'          // 3. Règles rapides du jeu
   | 'config'         // 3. Configuration (joueurs + paramètres)
   | 'setup'          // 4. Setup des cartes/noms + rôles en une fois
   | 'game'           // 5. Discussion + Vote
@@ -35,9 +36,9 @@ export interface ImagePair {
 }
 
 /**
- * Mode de jeu : emoji ou image
+ * Mode de jeu : uniquement image (sélection des photos dans le dossier images)
  */
-export type GameMode = 'emoji' | 'image'
+export type GameMode = 'image'
 
 /**
  * Joueur local pour le mode single-device
@@ -67,8 +68,9 @@ export interface MisterWhiteGameState {
   config: {
     playerCount: number
     playerNames: string[]
-    mode: GameMode          // Mode emoji ou image
-    theme: string           // Thème choisi (Animaux, Nourriture, etc.)
+    mode: GameMode          // Toujours 'image'
+    /** Clé de la paire choisie (theme|pairId) pour recharger en manche suivante */
+    selectedPairKey: string
     difficulty: 'easy' | 'medium' | 'hard'
     rounds: number          // Nombre de manches
     currentRound: number    // Manche actuelle
@@ -76,11 +78,11 @@ export interface MisterWhiteGameState {
   
   // Données de jeu
   gameData: {
-    // Emojis choisis pour cette partie
-    currentEmojis: EmojiPair | null
-    // Images choisies pour cette partie
+    // Images pour la manche en cours
     currentImages: ImagePair | null
-    
+    // Une paire par manche (index 0 = manche 1, etc.)
+    imagesByRound: ImagePair[]
+
     // Premier joueur (celui qui commence la discussion)
     firstPlayer: string | null
     
@@ -195,14 +197,9 @@ export const GAME_THEMES = {
 export const EMOJI_PAIRS: EmojiPair[] = GAME_THEMES.libre
 
 /**
- * Import du registre des images depuis assets
+ * Import du registre des images depuis assets (manifeste par thème)
  */
-import { IMAGE_REGISTRY } from '@assets/images/imageRegistry'
-
-/**
- * Configuration des paires d'images par thème (utilise le registre)
- */
-export const IMAGE_THEMES = IMAGE_REGISTRY
+import { chooseRandomImagePair } from '@assets/images/imageRegistry'
 
 /**
  * Actions possibles dans le jeu (nouveau flow)
@@ -210,7 +207,9 @@ export const IMAGE_THEMES = IMAGE_REGISTRY
 export interface MisterWhiteAction {
   type: 
     | 'FINISH_LOADING'        // Terminer le chargement
-    | 'START_FROM_RULES'      // Démarrer depuis les règles
+    | 'SHOW_RULES'            // Afficher les règles rapides
+    | 'BACK_TO_HOME'          // Retour à l'accueil
+    | 'START_FROM_RULES'      // Démarrer une partie (accueil ou règles)
     | 'SET_CONFIG'            // Définir la configuration
     | 'CONFIGURE_CARD'        // Configurer une carte (nom + voir rôle)
     | 'START_GAME'            // Démarrer le jeu (passer de setup à game)
@@ -227,10 +226,15 @@ export interface MisterWhiteAction {
     // Configuration
     playerCount?: number
     mode?: GameMode
-    theme?: string
+    /** Clé de la paire choisie (theme|pairId) */
+    selectedPairKey?: string
     difficulty?: 'easy' | 'medium' | 'hard'
     rounds?: number
-    
+    /** Paires d'images choisies : passées par l'UI après sélection dans le dossier images */
+    currentImages?: ImagePair | null
+    /** Une paire par manche (index 0 = manche 1) pour varier les images entre manches */
+    imagesByRound?: ImagePair[]
+
     // Configuration de carte
     cardIndex?: number
     playerName?: string
@@ -255,15 +259,15 @@ export function createInitialGameState(): MisterWhiteGameState {
     config: {
       playerCount: 6,
       playerNames: [],
-      mode: 'emoji',     // Mode par défaut
-      theme: 'libre',
+      mode: 'image',
+      selectedPairKey: '',
       difficulty: 'medium',
       rounds: 1,
       currentRound: 1
     },
     gameData: {
-      currentEmojis: null,
       currentImages: null,
+      imagesByRound: [],
       firstPlayer: null,
       eliminatedPlayers: [],
       eliminationHistory: [],
@@ -284,34 +288,67 @@ export function createInitialGameState(): MisterWhiteGameState {
 }
 
 /**
+ * Répartition optimale des rôles selon le nombre de joueurs
+ * civils = Experts, impostors = Novices, ghostFrame = Fantômes
+ */
+export const ROLE_DISTRIBUTION_TABLE: Record<number, { civils: number, impostors: number, ghostFrame: number }> = {
+  3: { civils: 2, impostors: 1, ghostFrame: 0 },
+  4: { civils: 3, impostors: 1, ghostFrame: 0 },
+  5: { civils: 3, impostors: 1, ghostFrame: 1 },
+  6: { civils: 4, impostors: 1, ghostFrame: 1 },
+  7: { civils: 5, impostors: 1, ghostFrame: 1 },
+  8: { civils: 5, impostors: 2, ghostFrame: 1 },
+  9: { civils: 6, impostors: 2, ghostFrame: 1 },
+  10: { civils: 7, impostors: 2, ghostFrame: 1 },
+  11: { civils: 8, impostors: 2, ghostFrame: 1 },
+  12: { civils: 8, impostors: 3, ghostFrame: 1 },
+  13: { civils: 9, impostors: 3, ghostFrame: 1 },
+  14: { civils: 10, impostors: 3, ghostFrame: 1 },
+  15: { civils: 11, impostors: 3, ghostFrame: 1 }
+}
+
+export interface RoleDistributionDisplay {
+  experts: number
+  novices: number
+  fantomes: number
+}
+
+export function getRoleDistribution(playerCount: number): RoleDistributionDisplay {
+  const distribution = ROLE_DISTRIBUTION_TABLE[playerCount]
+
+  if (!distribution) {
+    const fantomes = playerCount >= 5 ? 1 : 0
+    const novices = Math.max(1, Math.floor(playerCount / 4))
+    const experts = playerCount - novices - fantomes
+    return { experts, novices, fantomes }
+  }
+
+  return {
+    experts: distribution.civils,
+    novices: distribution.impostors,
+    fantomes: distribution.ghostFrame
+  }
+}
+
+export function getRoleDistributionRows(minPlayers = 3, maxPlayers = 10): Array<{ players: number } & RoleDistributionDisplay> {
+  return Array.from({ length: maxPlayers - minPlayers + 1 }, (_, index) => {
+    const players = minPlayers + index
+    return { players, ...getRoleDistribution(players) }
+  })
+}
+
+/**
  * Distribue les rôles selon le tableau d'équilibrage optimal
- * Toujours 1 Ghost Frame, nombre variable d'Undercover/Impostors
+ * Pas de Fantôme en dessous de 5 joueurs : 3 joueurs = 2 experts + 1 novice ; 4 = 3 experts + 1 novice
+ * À partir de 5 joueurs : 1 Ghost Frame + impostors + civils
  */
 export function distributeRoles(playerCount: number): MisterWhiteRole[] {
-  // Tableau de répartition optimale selon le nombre de joueurs
-  const roleDistribution: Record<number, { civils: number, impostors: number, ghostFrame: number }> = {
-    3: { civils: 1, impostors: 1, ghostFrame: 1 },  // Minimum technique
-    4: { civils: 2, impostors: 1, ghostFrame: 1 },  // Minimum technique
-    5: { civils: 3, impostors: 1, ghostFrame: 1 },  // 2 cachés pour pimenter, majorité civils
-    6: { civils: 4, impostors: 1, ghostFrame: 1 },  // Ratio ≈ 4 civils pour 2 cachés
-    7: { civils: 5, impostors: 1, ghostFrame: 1 },  // Une seule cible cachée + Ghost Frame
-    8: { civils: 5, impostors: 2, ghostFrame: 1 },  // 2 Undercover + 1 Ghost Frame = bon bluff stratégique
-    9: { civils: 6, impostors: 2, ghostFrame: 1 },  // Toujours 3 rôles cachés max pour tension
-    10: { civils: 7, impostors: 2, ghostFrame: 1 }, // Doublage civil pour garder majorité sûre
-    11: { civils: 8, impostors: 2, ghostFrame: 1 }, // Rôles cachés stables sans dominer
-    12: { civils: 8, impostors: 3, ghostFrame: 1 }, // 3 cachés ajoutent du chaos contrôlé
-    13: { civils: 9, impostors: 3, ghostFrame: 1 }, // Majorité civils, plusieurs suspects
-    14: { civils: 10, impostors: 3, ghostFrame: 1 }, // Ghost Frame dans le paquet ajoute incertitude
-    15: { civils: 11, impostors: 3, ghostFrame: 1 }  // Toujours civils en forte majorité
-  }
-  
-  // Récupérer la distribution pour ce nombre de joueurs
-  const distribution = roleDistribution[playerCount]
+  const distribution = ROLE_DISTRIBUTION_TABLE[playerCount]
   
   // Si le nombre de joueurs n'est pas dans le tableau, utiliser une formule de fallback
   if (!distribution) {
+    const numGhostFrame = playerCount >= 5 ? 1 : 0
     const numImpostors = Math.max(1, Math.floor(playerCount / 4)) // ≈ 25% d'impostors
-    const numGhostFrame = 1
     const numCivils = playerCount - numImpostors - numGhostFrame
     
     console.warn(`⚠️ Nombre de joueurs ${playerCount} non prévu dans le tableau, utilisation formule: ${numCivils} civils, ${numImpostors} impostors, ${numGhostFrame} ghost-frame`)
@@ -369,17 +406,15 @@ export function chooseRandomEmojis(theme: string = 'libre'): EmojiPair {
 }
 
 /**
- * Choisit des images aléatoires selon le thème
+ * Choisit une paire aléatoire pour le thème et assigne aléatoirement
+ * quelle image va aux Experts et laquelle aux Novices (async : chargement du manifeste).
  */
-export function chooseRandomImages(theme: string = 'libre'): ImagePair | null {
-  const themeImages = IMAGE_THEMES[theme as keyof typeof IMAGE_THEMES] || IMAGE_THEMES.libre
-  
-  if (!themeImages || themeImages.length === 0) {
-    console.warn(`Aucune image disponible pour le thème: ${theme}`)
-    return null
+export async function chooseRandomImages(theme: string = 'libre'): Promise<ImagePair | null> {
+  const pair = await chooseRandomImagePair(theme)
+  if (!pair) {
+    console.warn(`Aucune paire d'images disponible pour le thème: ${theme}`)
   }
-  
-  return themeImages[Math.floor(Math.random() * themeImages.length)]
+  return pair
 }
 
 /**
@@ -409,16 +444,23 @@ export function validateGameAction(
   switch (action.type) {
     case 'FINISH_LOADING':
       return state.phase === 'loading'
-      
-    case 'START_FROM_RULES':
+
+    case 'SHOW_RULES':
+      return state.phase === 'home'
+
+    case 'BACK_TO_HOME':
       return state.phase === 'rules'
       
+    case 'START_FROM_RULES':
+      return state.phase === 'home' || state.phase === 'rules'
+      
     case 'SET_CONFIG':
+      const hasImages = (action.data?.imagesByRound?.length ?? 0) > 0 || action.data?.currentImages !== undefined
       return state.phase === 'config' &&
              action.data?.playerCount !== undefined &&
              action.data.playerCount >= 3 &&
              action.data.playerCount <= 10 &&
-             action.data?.mode !== undefined
+             hasImages
              
     case 'CONFIGURE_CARD':
       return state.phase === 'setup' &&

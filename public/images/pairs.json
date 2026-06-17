@@ -1,0 +1,26 @@
+{
+  "pairs": [
+    { "id": "paire-01", "images": ["macron-accordeoniste.jpg", "macron-gilet-jaune.jpg"] },
+    { "id": "paire-02", "images": ["zuckerberg-mendiant.jpg", "bezos-mendiant.jpg"] },
+    { "id": "paire-03", "images": ["mbappe-president.jpg", "zidane-president.jpg"] },
+    { "id": "paire-04", "images": ["melenchon-jet-prive.jpg", "melenchon-ouvrier.jpg"] },
+    { "id": "paire-05", "images": ["xi-jinping-burger.jpg", "xi-jinping-sushis.jpg"] },
+    { "id": "paire-06", "images": ["sarkozy-ours.jpg", "poutine-ours.jpg"] },
+    { "id": "paire-07", "images": ["hollande-scooter-boulanger.jpg", "hollande-pluie.jpg"] },
+    { "id": "paire-08", "images": ["von-der-leyen-caf.jpg", "von-der-leyen-besoin-argent.jpg"] },
+    { "id": "paire-09", "images": ["zemmour-banlieue.jpg", "zemmour-mosquee.jpg"] },
+    { "id": "paire-10", "images": ["pyramides-construction.jpg", "pyramides-aliens.jpg"] },
+        { "id": "paire-11", "images": ["emma-watson-lgbt.jpg", "jk-rowling-lgbt.jpg"] },
+        { "id": "paire-12", "images": ["trump-pacifiste.jpg", "trump-militariste.jpg"] },
+        { "id": "paire-13", "images": ["greta-bateau.jpg", "greta-voiture.jpg"] },
+        { "id": "paire-14", "images": ["sarkozy-yacht.jpg", "sarkozy-prison.jpg"] },
+    { "id": "paire-15", "images": ["le-pen-parachutisme.jpg", "reine-elizabeth-parachutisme.jpg"] },
+        { "id": "paire-16", "images": ["greta-halterophilie.jpg", "reine-elizabeth-halterophilie.jpg"] },
+        { "id": "paire-17", "images": ["melenchon-halterophilie.jpg", "macron-halterophilie.jpg"] },
+        { "id": "paire-18", "images": ["macron-equitation.jpg", "mbappe-equitation.jpg"] },
+        { "id": "paire-19", "images": ["daft-punk-voiture.jpg", "eminem-voiture.jpg"] },
+        { "id": "paire-20", "images": ["einstein-maths-complexes.jpg", "einstein-maths-simples.jpg"] },
+        { "id": "paire-21", "images": ["obama-tour-eiffel.jpg", "obama-ovni.jpg"] },
+        { "id": "paire-22", "images": ["messi-equitation.jpg", "messi-peche.jpg"] }
+  ]
+}

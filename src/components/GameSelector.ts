@@ -16,13 +16,13 @@ export class GameSelector {
     
     this.container.innerHTML = `
       <div class="game-selector">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6">Choisissez votre jeu</h2>
+        <h2 class="text-2xl font-bold text-beige-900 mb-6">Choisissez votre jeu</h2>
         
         <!-- Filtres -->
-        <div class="filters mb-6 p-4 bg-gray-50 rounded-lg">
+        <div class="filters mb-6 p-4 bg-beige-100 rounded-lg">
           <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Joueurs</label>
+              <label class="block text-sm font-medium text-beige-700 mb-1">Joueurs</label>
               <select id="players-filter" class="input w-full">
                 <option value="">Tous</option>
                 <option value="2">2 joueurs</option>
@@ -33,7 +33,7 @@ export class GameSelector {
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Difficulté</label>
+              <label class="block text-sm font-medium text-beige-700 mb-1">Difficulté</label>
               <select id="difficulty-filter" class="input w-full">
                 <option value="">Toutes</option>
                 <option value="easy">Facile</option>
@@ -43,7 +43,7 @@ export class GameSelector {
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Durée max</label>
+              <label class="block text-sm font-medium text-beige-700 mb-1">Durée max</label>
               <select id="duration-filter" class="input w-full">
                 <option value="">Toutes</option>
                 <option value="10">10 min</option>
@@ -53,7 +53,7 @@ export class GameSelector {
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
+              <label class="block text-sm font-medium text-beige-700 mb-1">Catégorie</label>
               <select id="category-filter" class="input w-full">
                 <option value="">Toutes</option>
                 <option value="party">Soirée</option>
@@ -72,9 +72,9 @@ export class GameSelector {
         
         <!-- Message si aucun jeu -->
         <div id="no-games-message" class="hidden text-center py-12">
-          <div class="text-gray-400 text-6xl mb-4">🎮</div>
-          <h3 class="text-lg font-medium text-gray-900 mb-2">Aucun jeu trouvé</h3>
-          <p class="text-gray-500">Essayez de modifier vos filtres</p>
+          <div class="text-beige-500 text-6xl mb-4">🎮</div>
+          <h3 class="text-lg font-medium text-beige-900 mb-2">Aucun jeu trouvé</h3>
+          <p class="text-beige-600">Essayez de modifier vos filtres</p>
         </div>
       </div>
     `
@@ -106,30 +106,30 @@ export class GameSelector {
            data-categories="${game.category.join(',')}"
       >
         <!-- Gradient overlay for visual appeal -->
-        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-400 to-primary-600"></div>
         
         <div class="flex items-start justify-between mb-4">
-          <h3 class="text-xl font-bold text-gray-900 leading-tight">${game.name}</h3>
+          <h3 class="text-xl font-bold text-beige-900 leading-tight">${game.name}</h3>
           <span class="px-3 py-1.5 text-xs font-bold rounded-full ${difficultyColors[game.difficulty]} shadow-sm">
             ${difficultyLabels[game.difficulty]}
           </span>
         </div>
         
-        <p class="text-gray-600 text-sm mb-6 leading-relaxed">${game.description}</p>
+        <p class="text-beige-700 text-sm mb-6 leading-relaxed">${game.description}</p>
         
-        <div class="space-y-3 text-sm text-gray-600 mb-6">
-          <div class="flex items-center bg-gray-50 rounded-lg p-2">
-            <span class="w-8 h-8 mr-3 text-lg flex items-center justify-center bg-blue-100 rounded-lg">👥</span>
+        <div class="space-y-3 text-sm text-beige-700 mb-6">
+          <div class="flex items-center bg-beige-100 rounded-lg p-2">
+            <span class="w-8 h-8 mr-3 text-lg flex items-center justify-center bg-primary-100 rounded-lg">👥</span>
             <span class="font-medium">${game.minPlayers}-${game.maxPlayers} joueurs</span>
           </div>
           
-          <div class="flex items-center bg-gray-50 rounded-lg p-2">
-            <span class="w-8 h-8 mr-3 text-lg flex items-center justify-center bg-green-100 rounded-lg">⏱️</span>
+          <div class="flex items-center bg-beige-100 rounded-lg p-2">
+            <span class="w-8 h-8 mr-3 text-lg flex items-center justify-center bg-success-100 rounded-lg">⏱️</span>
             <span class="font-medium">~${game.estimatedDuration} minutes</span>
           </div>
           
-          <div class="flex items-center bg-gray-50 rounded-lg p-2">
-            <span class="w-8 h-8 mr-3 text-lg flex items-center justify-center bg-purple-100 rounded-lg">🏷️</span>
+          <div class="flex items-center bg-beige-100 rounded-lg p-2">
+            <span class="w-8 h-8 mr-3 text-lg flex items-center justify-center bg-primary-200 rounded-lg">🏷️</span>
             <span class="font-medium">${game.category.join(', ')}</span>
           </div>
         </div>

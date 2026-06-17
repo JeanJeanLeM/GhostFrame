@@ -12,8 +12,8 @@ export async function generateGameQRCode(gameCode: string): Promise<string> {
       errorCorrectionLevel: 'M',
       margin: 1,
       color: {
-        dark: '#1f2937', // Couleur sombre
-        light: '#ffffff' // Couleur claire
+        dark: '#3d3229',
+        light: '#fdfbf7'
       },
       width: 256
     })

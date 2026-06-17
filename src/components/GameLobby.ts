@@ -72,14 +72,14 @@ export class GameLobby {
     this.container.innerHTML = `
       <div class="game-lobby max-w-4xl mx-auto">
         <!-- En-tête -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+        <div class="bg-beige-50 rounded-xl shadow-lg p-6 mb-6 border border-beige-200">
           <div class="flex items-center justify-between mb-4">
             <div>
-              <h1 class="text-2xl font-bold text-gray-900">${gameConfig?.name || 'Jeu'}</h1>
-              <p class="text-gray-600">${gameConfig?.description || ''}</p>
+              <h1 class="text-2xl font-bold text-beige-900">${gameConfig?.name || 'Jeu'}</h1>
+              <p class="text-beige-700">${gameConfig?.description || ''}</p>
             </div>
             <div class="text-right">
-              <div class="text-sm text-gray-500">Code de la partie</div>
+              <div class="text-sm text-beige-600">Code de la partie</div>
               <div class="text-2xl font-mono font-bold text-primary-600">
                 ${formatGameCode(this.gameSession.code)}
               </div>
@@ -87,22 +87,22 @@ export class GameLobby {
           </div>
           
           <!-- Informations du jeu -->
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-beige-100 rounded-lg">
             <div class="text-center">
-              <div class="text-2xl font-bold text-gray-900">${players.length}</div>
-              <div class="text-sm text-gray-500">Joueurs</div>
+              <div class="text-2xl font-bold text-beige-900">${players.length}</div>
+              <div class="text-sm text-beige-600">Joueurs</div>
             </div>
             <div class="text-center">
-              <div class="text-2xl font-bold text-gray-900">${gameConfig?.minPlayers || 0}-${gameConfig?.maxPlayers || 0}</div>
-              <div class="text-sm text-gray-500">Requis</div>
+              <div class="text-2xl font-bold text-beige-900">${gameConfig?.minPlayers || 0}-${gameConfig?.maxPlayers || 0}</div>
+              <div class="text-sm text-beige-600">Requis</div>
             </div>
             <div class="text-center">
-              <div class="text-2xl font-bold text-gray-900">~${gameConfig?.estimatedDuration || 0}</div>
-              <div class="text-sm text-gray-500">Minutes</div>
+              <div class="text-2xl font-bold text-beige-900">~${gameConfig?.estimatedDuration || 0}</div>
+              <div class="text-sm text-beige-600">Minutes</div>
             </div>
             <div class="text-center">
-              <div class="text-2xl font-bold text-gray-900">${readyCount}/${players.length}</div>
-              <div class="text-sm text-gray-500">Prêts</div>
+              <div class="text-2xl font-bold text-beige-900">${readyCount}/${players.length}</div>
+              <div class="text-sm text-beige-600">Prêts</div>
             </div>
           </div>
         </div>
@@ -110,8 +110,8 @@ export class GameLobby {
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- Liste des joueurs -->
           <div class="lg:col-span-2">
-            <div class="bg-white rounded-xl shadow-lg p-6">
-              <h2 class="text-lg font-semibold text-gray-900 mb-4">
+            <div class="bg-beige-50 rounded-xl shadow-lg p-6 border border-beige-200">
+              <h2 class="text-lg font-semibold text-beige-900 mb-4">
                 Joueurs (${players.length}/${gameConfig?.maxPlayers || 8})
               </h2>
               
@@ -120,11 +120,11 @@ export class GameLobby {
               </div>
               
               ${players.length < (gameConfig?.maxPlayers || 8) ? `
-                <div class="mt-4 p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
-                  <p class="text-gray-500 text-sm">
+                <div class="mt-4 p-4 border-2 border-dashed border-beige-300 rounded-lg text-center">
+                  <p class="text-beige-600 text-sm">
                     En attente d'autres joueurs...
                   </p>
-                  <p class="text-gray-400 text-xs mt-1">
+                  <p class="text-beige-500 text-xs mt-1">
                     Partagez le code de la partie : <strong>${this.gameSession.code}</strong>
                   </p>
                 </div>
@@ -135,24 +135,24 @@ export class GameLobby {
           <!-- Actions et QR Code -->
           <div class="space-y-6">
             <!-- Actions du joueur -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-              <h3 class="text-lg font-semibold text-gray-900 mb-4">Actions</h3>
+            <div class="bg-beige-50 rounded-xl shadow-lg p-6 border border-beige-200">
+              <h3 class="text-lg font-semibold text-beige-900 mb-4">Actions</h3>
               
               ${this.renderPlayerActions(currentUser, isHost, canStart)}
             </div>
 
             <!-- QR Code -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-              <h3 class="text-lg font-semibold text-gray-900 mb-4">Inviter des joueurs</h3>
+            <div class="bg-beige-50 rounded-xl shadow-lg p-6 border border-beige-200">
+              <h3 class="text-lg font-semibold text-beige-900 mb-4">Inviter des joueurs</h3>
               
               <div class="text-center">
                 <div id="qr-code-container" class="mb-4">
-                  <div class="w-48 h-48 bg-gray-100 rounded-lg flex items-center justify-center mx-auto">
+                  <div class="w-48 h-48 bg-beige-100 rounded-lg flex items-center justify-center mx-auto">
                     <div class="loading-spinner"></div>
                   </div>
                 </div>
                 
-                <p class="text-sm text-gray-600 mb-3">
+                <p class="text-sm text-beige-700 mb-3">
                   Scannez ce QR code pour rejoindre
                 </p>
                 
@@ -198,17 +198,17 @@ export class GameLobby {
             
             <div class="flex-1">
               <div class="flex items-center space-x-2">
-                <h3 class="font-bold text-gray-900 text-lg">
+                <h3 class="font-bold text-beige-900 text-lg">
                   ${player.displayName}
                 </h3>
-                ${isCurrentUser ? '<span class="text-blue-600 text-sm font-medium">(Vous)</span>' : ''}
+                ${isCurrentUser ? '<span class="text-primary-600 text-sm font-medium">(Vous)</span>' : ''}
               </div>
               
               <div class="flex items-center space-x-2 mt-1">
                 <span class="player-status-badge ${isOnline ? 'online' : 'offline'}">
                   ${isOnline ? '🟢 En ligne' : '🔴 Hors ligne'}
                 </span>
-                ${!isOnline ? `<span class="text-xs text-gray-500">${PresenceService.getTimeSinceLastSeen(player.lastSeen)}</span>` : ''}
+                ${!isOnline ? `<span class="text-xs text-beige-600">${PresenceService.getTimeSinceLastSeen(player.lastSeen)}</span>` : ''}
               </div>
             </div>
           </div>
@@ -401,8 +401,8 @@ export class GameLobby {
       const container = document.getElementById('qr-code-container')
       if (container) {
         container.innerHTML = `
-          <div class="w-48 h-48 bg-gray-100 rounded-lg flex items-center justify-center mx-auto">
-            <span class="text-gray-500 text-sm">QR code indisponible</span>
+          <div class="w-48 h-48 bg-beige-100 rounded-lg flex items-center justify-center mx-auto">
+            <span class="text-beige-600 text-sm">QR code indisponible</span>
           </div>
         `
       }
