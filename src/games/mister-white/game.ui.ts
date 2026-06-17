@@ -1680,9 +1680,10 @@ export class MisterWhiteGameUI implements GameUI {
     const modal = document.createElement('div')
     const player = state.players[cardIndex]
     const hasExistingName = player.name && player.name.trim() !== ''
-    const isNewRound = hasExistingName && !player.cardConfigured
+    const isSubsequentRound = state.config.currentRound > 1
+    const skipNameStep = isSubsequentRound || (hasExistingName && !player.cardConfigured)
 
-    const newRoundBanner = isNewRound ? `
+    const newRoundBanner = skipNameStep ? `
       <div class="bg-warning-100 border border-warning-500 rounded-xl p-3 mb-3">
         <div class="text-warning-700 font-semibold">🔄 Nouvelle manche</div>
         <div class="text-beige-900 text-lg font-bold mt-1">${player.name}</div>
@@ -1690,7 +1691,7 @@ export class MisterWhiteGameUI implements GameUI {
       </div>
     ` : ''
 
-    const nameInputBlock = !isNewRound ? `
+    const nameInputBlock = !skipNameStep ? `
       <div>
         <label class="block text-beige-800 text-sm font-semibold mb-2">Votre prénom :</label>
         <input 
@@ -1711,7 +1712,7 @@ export class MisterWhiteGameUI implements GameUI {
           id="confirm-card-btn"
           class="flex-1 bg-gradient-to-r from-success-500 to-success-600 hover:from-success-600 hover:to-success-700 text-white font-bold py-3 px-6 rounded-xl transition-all"
         >
-          ✅ ${isNewRound ? 'J\'ai vu mon rôle' : 'Valider'}
+          ✅ ${skipNameStep ? 'J\'ai vu mon rôle' : 'Valider'}
         </button>
         <button 
           id="cancel-card-btn"
@@ -1723,115 +1724,275 @@ export class MisterWhiteGameUI implements GameUI {
     `
 
     if (hasImageRole) {
-      modal.className = 'fixed inset-0 bg-black/95 z-50 flex flex-col'
-      modal.innerHTML = `
-        <div class="flex-1 flex items-center justify-center p-4 min-h-0 overflow-hidden">
-          <img
-            id="role-image-preview"
-            src="${imageUrl || ''}"
-            alt="Votre image"
-            class="max-w-[95vw] max-h-[calc(100vh-220px)] w-auto h-auto object-contain rounded-xl shadow-2xl"
-            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'; console.warn('[Card] Échec chargement image:', this.src)"
-          >
-          <div class="hidden flex-col items-center justify-center p-8 text-white min-h-[200px]">
-            <div class="text-6xl mb-4">🖼️</div>
-            <p class="text-lg">Image non disponible</p>
-          </div>
-        </div>
-        <div class="flex-shrink-0 bg-beige-200 border-t border-beige-400 p-4 space-y-3">
+      this.showImageRoleCardModal(cardIndex, imageUrl || '', skipNameStep, player, state)
+      return
+    }
+
+    const content = this.getRoleContent(role as any, state)
+    modal.className = 'fixed inset-0 bg-black/75 flex items-center justify-center z-50'
+    modal.innerHTML = `
+      <div class="bg-beige-200 rounded-2xl p-6 border border-beige-400 max-w-md mx-4">
+        <div class="text-center mb-6">
           ${newRoundBanner}
-          <p class="text-beige-800 text-sm text-center">Mémorisez votre image !</p>
+          ${content.display}
+          <h3 class="text-xl font-bold text-beige-900 mb-2">${skipNameStep ? 'Votre nouveau rôle' : 'Configuration de votre carte'}</h3>
+          ${content.description}
+        </div>
+        <div class="space-y-4">
           ${nameInputBlock}
           ${actionButtons}
         </div>
-      `
-    } else {
-      const content = this.getRoleContent(role as any, state)
-      modal.className = 'fixed inset-0 bg-black/75 flex items-center justify-center z-50'
-      modal.innerHTML = `
-        <div class="bg-beige-200 rounded-2xl p-6 border border-beige-400 max-w-md mx-4">
-          <div class="text-center mb-6">
-            ${newRoundBanner}
-            ${content.display}
-            <h3 class="text-xl font-bold text-beige-900 mb-2">${isNewRound ? 'Votre nouveau rôle' : 'Configuration de votre carte'}</h3>
-            ${content.description}
+      </div>
+    `
+
+    document.body.appendChild(modal)
+    this.attachCardConfigListeners(modal, cardIndex, state, skipNameStep, () => {
+      document.body.removeChild(modal)
+    })
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) document.body.removeChild(modal)
+    })
+  }
+
+  /**
+   * Flux en 3 étapes pour Expert/Novice (1 seule à la 1re manche) :
+   * 1. Saisie du prénom — uniquement manche 1
+   * 2. Affichage de l'image en grand
+   * 3. Validation et fermeture
+   * Manches suivantes : étapes 2 et 3 seulement (prénom conservé).
+   */
+  private showImageRoleCardModal(
+    cardIndex: number,
+    imageUrl: string,
+    skipNameStep: boolean,
+    player: any,
+    state: any
+  ): void {
+    const modal = document.createElement('div')
+    modal.className = 'fixed inset-0 z-50 flex flex-col'
+    document.body.appendChild(modal)
+
+    let step = skipNameStep ? 2 : 1
+    let savedPlayerName = skipNameStep ? player.name : ''
+
+    const newRoundBanner = skipNameStep ? `
+      <div class="bg-warning-100 border border-warning-500 rounded-xl p-3 mb-3">
+        <div class="text-warning-700 font-semibold">🔄 Nouvelle manche</div>
+        <div class="text-beige-900 text-lg font-bold mt-1">${player.name}</div>
+        <div class="text-beige-700 text-sm">Score actuel : ${player.score || 0} pts</div>
+      </div>
+    ` : ''
+
+    const imageBlock = `
+      <div class="flex-1 flex items-center justify-center p-4 min-h-0 overflow-hidden">
+        <img
+          id="role-image-preview"
+          src="${imageUrl}"
+          alt="Votre image"
+          class="max-w-[95vw] max-h-[calc(100vh-180px)] w-auto h-auto object-contain rounded-xl shadow-2xl"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'; console.warn('[Card] Échec chargement image:', this.src)"
+        >
+        <div class="hidden flex-col items-center justify-center p-8 text-white min-h-[200px]">
+          <div class="text-6xl mb-4">🖼️</div>
+          <p class="text-lg">Image non disponible</p>
+        </div>
+      </div>
+    `
+
+    const closeModal = () => {
+      document.body.removeChild(modal)
+    }
+
+    const validateName = (): boolean => {
+      const input = modal.querySelector('#player-name-input') as HTMLInputElement
+      const playerName = input?.value.trim() ?? savedPlayerName
+
+      if (!playerName) {
+        alert('Veuillez saisir votre prénom !')
+        return false
+      }
+
+      const existingNames = state.players
+        .filter((p: any, i: number) => i !== cardIndex && p.cardConfigured)
+        .map((p: any) => p.name.toLowerCase())
+
+      if (existingNames.includes(playerName.toLowerCase())) {
+        alert('Ce prénom est déjà utilisé !')
+        return false
+      }
+
+      savedPlayerName = playerName
+      return true
+    }
+
+    const confirmCard = () => {
+      this.dispatchGameAction({
+        type: 'CONFIGURE_CARD',
+        data: { cardIndex, playerName: savedPlayerName }
+      })
+      closeModal()
+    }
+
+    const attachImageLogs = () => {
+      const roleImage = modal.querySelector('#role-image-preview') as HTMLImageElement
+      if (roleImage) {
+        roleImage.addEventListener('load', () => console.log('[Card] Image chargée:', roleImage.src))
+        roleImage.addEventListener('error', () => console.warn('[Card] Échec chargement image:', roleImage.src))
+      }
+    }
+
+    const stepLabel = (viewStep: 2 | 3): string => {
+      if (skipNameStep) {
+        return viewStep === 2 ? 'Étape 1 / 2' : 'Étape 2 / 2'
+      }
+      return viewStep === 2 ? 'Étape 2 / 3' : 'Étape 3 / 3'
+    }
+
+    const renderStep = () => {
+      if (step === 1) {
+        modal.className = 'fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4'
+        modal.innerHTML = `
+          <div class="bg-beige-200 rounded-2xl p-6 border border-beige-400 max-w-md w-full mx-4">
+            <div class="text-center mb-6">
+              <p class="text-beige-600 text-sm mb-2">Étape 1 / 3</p>
+              <h3 class="text-xl font-bold text-beige-900">Qui êtes-vous ?</h3>
+              <p class="text-beige-700 text-sm mt-2">Entrez votre prénom avant de découvrir votre image.</p>
+            </div>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-beige-800 text-sm font-semibold mb-2">Votre prénom :</label>
+                <input 
+                  type="text" 
+                  id="player-name-input"
+                  class="w-full px-4 py-3 bg-beige-100 border-2 border-beige-400 text-beige-900 rounded-xl text-lg focus:outline-none focus:border-primary-500 transition-all"
+                  placeholder="Entrez votre prénom..."
+                  maxlength="20"
+                  value="${savedPlayerName}"
+                >
+              </div>
+              <div class="flex space-x-3">
+                <button id="next-step-btn" class="flex-1 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold py-3 px-6 rounded-xl transition-all">
+                  Continuer →
+                </button>
+                <button id="cancel-card-btn" class="flex-1 bg-gradient-to-r from-beige-500 to-beige-600 hover:from-beige-600 hover:to-beige-700 text-white font-bold py-3 px-6 rounded-xl transition-all">
+                  ❌ Annuler
+                </button>
+              </div>
+            </div>
           </div>
-          <div class="space-y-4">
-            ${nameInputBlock}
-            ${actionButtons}
+        `
+
+        const nameInput = modal.querySelector('#player-name-input') as HTMLInputElement
+        nameInput?.focus()
+
+        const goToImage = () => {
+          if (!validateName()) return
+          nameInput?.blur()
+          step = 2
+          renderStep()
+        }
+
+        modal.querySelector('#next-step-btn')?.addEventListener('click', goToImage)
+        modal.querySelector('#cancel-card-btn')?.addEventListener('click', closeModal)
+        nameInput?.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') goToImage()
+        })
+        return
+      }
+
+      modal.className = 'fixed inset-0 bg-black/95 z-50 flex flex-col'
+
+      if (step === 2) {
+        modal.innerHTML = `
+          ${imageBlock}
+          <div class="flex-shrink-0 bg-beige-200 border-t border-beige-400 p-4 space-y-3">
+            ${newRoundBanner}
+            <p class="text-beige-600 text-xs text-center">${stepLabel(2)}</p>
+            <p class="text-beige-800 text-sm text-center font-semibold">Mémorisez bien votre image !</p>
+            <button id="next-step-btn" class="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold py-3 px-6 rounded-xl transition-all">
+              J'ai mémorisé →
+            </button>
+          </div>
+        `
+
+        attachImageLogs()
+        modal.querySelector('#next-step-btn')?.addEventListener('click', () => {
+          step = 3
+          renderStep()
+        })
+        return
+      }
+
+      modal.innerHTML = `
+        ${imageBlock}
+        <div class="flex-shrink-0 bg-beige-200 border-t border-beige-400 p-4 space-y-3">
+          ${newRoundBanner}
+          <p class="text-beige-600 text-xs text-center">${stepLabel(3)}</p>
+          <p class="text-beige-800 text-sm text-center">
+            Prêt à valider votre carte, <strong class="text-beige-900">${savedPlayerName}</strong> ?
+          </p>
+          <div class="flex space-x-3">
+            <button id="confirm-card-btn" class="flex-1 bg-gradient-to-r from-success-500 to-success-600 hover:from-success-600 hover:to-success-700 text-white font-bold py-3 px-6 rounded-xl transition-all">
+              ✅ ${skipNameStep ? 'J\'ai vu mon rôle' : 'Valider'}
+            </button>
+            <button id="cancel-card-btn" class="flex-1 bg-gradient-to-r from-beige-500 to-beige-600 hover:from-beige-600 hover:to-beige-700 text-white font-bold py-3 px-6 rounded-xl transition-all">
+              ❌ Annuler
+            </button>
           </div>
         </div>
       `
+
+      attachImageLogs()
+      modal.querySelector('#confirm-card-btn')?.addEventListener('click', confirmCard)
+      modal.querySelector('#cancel-card-btn')?.addEventListener('click', closeModal)
     }
-    
-    document.body.appendChild(modal)
-    
-    // Focus sur l'input (seulement si visible, pas pour nouvelle manche)
+
+    renderStep()
+  }
+
+  private attachCardConfigListeners(
+    modal: HTMLElement,
+    cardIndex: number,
+    state: any,
+    skipNameStep: boolean,
+    closeModal: () => void
+  ): void {
     const nameInput = modal.querySelector('#player-name-input') as HTMLInputElement
-    if (!isNewRound && nameInput) {
+    if (!skipNameStep && nameInput) {
       nameInput.focus()
     }
-    
-    // Event listener logs chargement image
-    const roleImage = modal.querySelector('#role-image-preview') as HTMLImageElement
-    if (roleImage) {
-      roleImage.addEventListener('load', () => {
-        console.log('[Card] Image chargée avec succès:', roleImage.src)
-      })
-      roleImage.addEventListener('error', () => {
-        console.warn('[Card] Échec chargement image (event error) — URL:', roleImage.src, '— Vérifier que le fichier existe dans public/images-v2/paire-XX/')
-      })
-    }
-    
-    // Event listeners pour le modal
-    const confirmBtn = modal.querySelector('#confirm-card-btn')
-    const cancelBtn = modal.querySelector('#cancel-card-btn')
-    
+
     const handleConfirm = () => {
-      const playerName = nameInput.value.trim()
-      
+      const playerName = skipNameStep ? (nameInput?.value.trim() || state.players[cardIndex].name) : nameInput.value.trim()
+
       if (!playerName) {
         alert('Veuillez saisir votre prénom !')
         return
       }
-      
-      // Vérifier l'unicité du nom (seulement pour les nouvelles cartes, pas les nouvelles manches)
-      if (!isNewRound) {
+
+      if (!skipNameStep) {
         const existingNames = state.players
           .filter((p: any, i: number) => i !== cardIndex && p.cardConfigured)
           .map((p: any) => p.name.toLowerCase())
-        
+
         if (existingNames.includes(playerName.toLowerCase())) {
           alert('Ce prénom est déjà utilisé !')
           return
         }
       }
-      
-      // Configurer la carte
+
       this.dispatchGameAction({
         type: 'CONFIGURE_CARD',
         data: { cardIndex, playerName }
       })
-      
-      // Fermer le modal
-      document.body.removeChild(modal)
+      closeModal()
     }
-    
-    const handleCancel = () => {
-      document.body.removeChild(modal)
-    }
-    
-    confirmBtn?.addEventListener('click', handleConfirm)
-    cancelBtn?.addEventListener('click', handleCancel)
+
+    modal.querySelector('#confirm-card-btn')?.addEventListener('click', handleConfirm)
+    modal.querySelector('#cancel-card-btn')?.addEventListener('click', closeModal)
     nameInput?.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') handleConfirm()
     })
-    
-    if (!hasImageRole) {
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) handleCancel()
-      })
-    }
   }
 
   /**

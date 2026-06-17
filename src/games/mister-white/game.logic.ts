@@ -174,10 +174,14 @@ export class MisterWhiteGameLogic implements GameLogic {
     const roles = distributeRoles(data.playerCount)
     const shuffledRoles = shuffleArray(roles)
     
+    // Conserver les noms d'une éventuelle partie précédente (ex: bouton "Nouvelle partie").
+    // Si un nom est déjà connu pour le slot, le joueur n'aura qu'à découvrir son nouveau rôle.
+    const savedNames = state.config.playerNames ?? []
+    
     // Créer les slots de joueurs avec des rôles pré-assignés
     state.players = Array.from({ length: data.playerCount }, (_, index) => ({
       id: `player-${index}`,
-      name: '',
+      name: savedNames[index] ?? '',
       role: shuffledRoles[index],
       cardConfigured: false,
       isEliminated: false,  // IMPORTANT: Réinitialiser le statut éliminé
@@ -466,9 +470,11 @@ export class MisterWhiteGameLogic implements GameLogic {
   private processNewGame(state: MisterWhiteGameState): MisterWhiteGameState {
     // Garder la configuration mais recommencer complètement
     const config = { ...state.config }
+    // Conserver les noms des cartes de la partie précédente
+    const previousNames = state.players.map(player => player.name)
     const newState = createInitialGameState()
     
-    newState.config = { ...config, currentRound: 1 }
+    newState.config = { ...config, currentRound: 1, playerNames: previousNames }
     newState.phase = 'config'  // Retour à la configuration pour permettre des modifications
     
     return newState
