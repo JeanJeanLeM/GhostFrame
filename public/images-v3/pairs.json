@@ -1,0 +1,23 @@
+{
+  "pairs": [
+    { "id": "paire-01", "label": "Chat", "images": ["P01A.jpg", "P01B.jpg"] },
+    { "id": "paire-02", "label": "Elizabeth", "images": ["P02A.jpg", "P02B.jpg"] },
+    { "id": "paire-03", "label": "Shakira", "images": ["P03A.jpg", "P03B.jpg"] },
+    { "id": "paire-04", "label": "Complot Lune", "images": ["P04A.jpg", "P04B.jpg"] },
+    { "id": "paire-05", "label": "Musk", "images": ["P05A.jpg", "P05B.jpg"] },
+    { "id": "paire-06", "label": "Terre plate", "images": ["P06A.jpg", "P06B.jpg"] },
+    { "id": "paire-07", "label": "Trump + Greta", "images": ["P07A.jpg", "P07B.jpg"] },
+    { "id": "paire-08", "label": "Singe", "images": ["P08A.jpg", "P08B.jpg"] },
+    { "id": "paire-09", "label": "Daft / Eminem", "images": ["P09A.jpg", "P09B.jpg"] },
+    { "id": "paire-10", "label": "Macron", "images": ["P10A.jpg", "P10B.jpg"] },
+    { "id": "paire-11", "label": "Chien", "images": ["P11A.jpg", "P11B.jpg"] },
+    { "id": "paire-12", "label": "Xi Jinping", "images": ["P12A.jpg", "P12B.jpg"] },
+    { "id": "paire-13", "label": "Famille gare", "images": ["P13A.jpg", "P13B.jpg"] },
+    { "id": "paire-14", "label": "Haltérophilie", "images": ["P14A.jpg", "P14B.jpg"] },
+    { "id": "paire-15", "label": "Mélenchon", "images": ["P15A.jpg", "P15B.jpg"] },
+    { "id": "paire-16", "label": "Frigo", "images": ["P16A.jpg", "P16B.jpg"] },
+    { "id": "paire-17", "label": "Jesse Pinkman", "images": ["P17A.jpg", "P17B.jpg"] },
+    { "id": "paire-18", "label": "Greta transport", "images": ["P18A.jpg", "P18B.jpg"] },
+    { "id": "paire-19", "label": "Vacances", "images": ["P19A.jpg", "P19B.jpg"] }
+  ]
+}

@@ -145,7 +145,7 @@ export class MisterWhiteGameLogic implements GameLogic {
     const imagesByRound = data.imagesByRound ?? []
     state.gameData.imagesByRound = imagesByRound
     state.gameData.currentImages = data.currentImages ?? (imagesByRound.length > 0 ? imagesByRound[0]! : null)
-    const themeForSecret = state.config.selectedPairKey ? state.config.selectedPairKey.split('|')[0] : 'libre-v2'
+    const themeForSecret = state.config.selectedPairKey ? state.config.selectedPairKey.split('|')[0] : 'libre-v3'
     state.gameData.guessPhase.secretWord = generateSecretWord(themeForSecret)
     
     // IMPORTANT: Réinitialiser toutes les données de la manche

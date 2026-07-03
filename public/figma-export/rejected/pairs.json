@@ -1,0 +1,12 @@
+{
+  "pairs": [
+    { "id": "paire-03", "images": ["instagram-selfie-tour-eiffel.jpg", "instagram-realite-tour-eiffel.jpg"], "theme": "tour eiffel instagram" },
+    { "id": "paire-05", "images": ["vacances-espagne.jpg", "vacances-bretagne.jpg"], "theme": "vacances espagne/bretagne" },
+    { "id": "paire-06", "images": ["cafe-paris-instagram.jpg", "cafe-paris-realite.jpg"], "theme": "cafe", "note": "images missing on disk" },
+    { "id": "paire-07", "images": ["famille-gare-retards.jpg", "famille-gare-a-lheure.jpg"], "theme": "famille retard train" },
+    { "id": "paire-08", "images": ["jesse-pinkman-desinvolte.jpg", "jesse-pinkman-amorti.jpg"], "theme": "jesse pinkman" },
+    { "id": "paire-15", "images": ["justin-bieber-16ans.jpg", "justin-bieber-aujourdhui.jpg"], "theme": "justin bieber" },
+    { "id": "paire-17", "images": ["curry-lancer-franc.jpg", "lebron-dance-fortnite-clown-fallback.jpg"], "theme": "basket curry/lebron" },
+    { "id": "paire-20", "images": ["dicaprio-titanic-jeune.jpg", "dicaprio-revenant-age.jpg"], "theme": "di caprio" }
+  ]
+}

@@ -1,12 +1,16 @@
 import { ImagePair } from '@games/mister-white/game.state'
 
 const BASE_IMAGES = '/images/themes'
-/** Manifeste v2 (dossier public/images-v2/ avec paire-01, paire-02, …) */
+/** Manifeste v2 (archive / refusées) */
 const GLOBAL_PAIRS_V2_MANIFEST = '/images-v2/pairs.json'
+/** Manifeste v3 — ordre canonique frame Figma Accepted (voir PAIRS-V3.md) */
+const GLOBAL_PAIRS_V3_MANIFEST = '/images-v3/pairs.json'
 
 export interface PairManifestEntry {
   id: string
   images: string[]
+  /** Libellé court (ex. « Chat », « Shakira ») — présent dans images-v3/pairs.json */
+  label?: string
 }
 
 export interface PairsManifest {
@@ -15,9 +19,10 @@ export interface PairsManifest {
 
 /**
  * URL du manifeste des paires pour un thème.
- * Pour "libre-v2", utilise le manifeste global public/images-v2/pairs.json.
+ * Pour "libre-v3", utilise public/images-v3/pairs.json (ordre Figma Accepted).
  */
 export function getPairsManifestUrl(theme: string): string {
+  if (theme === 'libre-v3') return GLOBAL_PAIRS_V3_MANIFEST
   if (theme === 'libre-v2') return GLOBAL_PAIRS_V2_MANIFEST
   return `${BASE_IMAGES}/${theme}/pairs.json`
 }
@@ -26,6 +31,7 @@ export function getPairsManifestUrl(theme: string): string {
  * Préfixe pour les URLs d'images d'une paire.
  */
 function getBasePathForPair(theme: string, pairId: string): string {
+  if (theme === 'libre-v3') return `/images-v3/${pairId}`
   if (theme === 'libre-v2') return `/images-v2/${pairId}`
   return `${BASE_IMAGES}/${theme}/${pairId}`
 }
@@ -74,7 +80,7 @@ export async function hasImagesForTheme(theme: string): Promise<boolean> {
 export async function chooseRandomImagePair(theme: string): Promise<ImagePair | null> {
   const pairs = await fetchPairsForTheme(theme)
   if (pairs.length === 0) {
-    console.warn('[Images] Aucune paire pour le thème', theme, theme === 'libre-v2' ? '— vérifier public/images-v2/pairs.json et public/images-v2/paire-XX/' : '— vérifier public/images/themes/' + theme + '/pairs.json')
+    console.warn('[Images] Aucune paire pour le thème', theme, theme === 'libre-v3' ? '— vérifier public/images-v3/pairs.json' : theme === 'libre-v2' ? '— vérifier public/images-v2/pairs.json' : '— vérifier public/images/themes/' + theme + '/pairs.json')
     return null
   }
 
@@ -98,7 +104,8 @@ export async function chooseRandomImagePair(theme: string): Promise<ImagePair | 
 /**
  * Liste des thèmes (dossiers sous /images/themes/) à scanner pour les paires.
  */
-export const IMAGE_THEMES = ['libre-v2', 'animaux', 'nourriture', 'metiers', 'objets', 'emotions'] as const
+/** Thème principal du jeu : libre-v3 (19 paires, ordre Figma Accepted). */
+export const IMAGE_THEMES = ['libre-v3', 'libre-v2', 'animaux', 'nourriture', 'metiers', 'objets', 'emotions'] as const
 
 export interface PairOption {
   theme: string
@@ -122,7 +129,7 @@ export async function fetchAllPairs(): Promise<PairOption[]> {
         id: pair.id,
         folder: `${theme}/${pair.id}`,
         images: pair.images,
-        label: `${theme} – ${pair.id}`
+        label: pair.label ? `${pair.id} – ${pair.label}` : `${theme} – ${pair.id}`
       })
     }
   }
@@ -174,6 +181,32 @@ export async function getImagePairsForRounds(
     else result.push(selected)
   }
   console.log('[Images] Paires pour', rounds, 'manche(s):', result.map((r) => r.id))
+  return result
+}
+
+/**
+ * Retourne les paires pour les manches en démarrant après les parties déjà jouées.
+ * Si le joueur le plus expérimenté a déjà joué N parties, il a déjà vu les N premières
+ * paires : on les saute et on démarre à la paire N+1, puis on enchaîne dans l'ordre
+ * (retour au début si on dépasse la dernière paire).
+ */
+export async function getImagePairsFromGamesPlayed(
+  theme: string,
+  gamesPlayed: number,
+  rounds: number
+): Promise<ImagePair[]> {
+  const pairs = await fetchPairsForTheme(theme)
+  if (pairs.length === 0) return []
+
+  const start = Math.max(0, Math.floor(gamesPlayed || 0))
+  const total = Math.max(1, rounds)
+  const result: ImagePair[] = []
+  for (let i = 0; i < total; i++) {
+    const idx = (start + i) % pairs.length
+    const p = await getImagePairById(theme, pairs[idx].id)
+    if (p) result.push(p)
+  }
+  console.log('[Images] Paires (parties déjà jouées =', start, ') pour', rounds, 'manche(s):', result.map((r) => r.id))
   return result
 }
 

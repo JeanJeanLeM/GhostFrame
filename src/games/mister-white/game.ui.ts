@@ -5,13 +5,31 @@ import {
   LocalPlayer,
   getRoleDistributionRows
 } from './game.state'
+import { getStoredGamesPlayed, recordGameSessionCompleted } from './gamesPlayedStorage'
 import QRCode from 'qrcode'
+
+/**
+ * Images (paparazzi / scènes du jeu) affichées aléatoirement en fond de l'écran
+ * de chargement, avec un effet de flash et un léger film coloré.
+ */
+const LOADING_BACKGROUNDS = [
+  '/images-role-demo/paire-03/expert-redcarpet.png', // Tapis rouge - Expert
+  '/images-role-demo/paire-03/novice-valet.png',     // Tapis rouge - Novice
+  '/images-role-demo/paire-02/novice-vendor.png',    // Match de foot - Novice
+  '/images-role-demo/paire-01/expert-pop-star.png'   // Concert pop - Expert
+] as const
+
+function pickRandomLoadingBackground(): string {
+  return LOADING_BACKGROUNDS[Math.floor(Math.random() * LOADING_BACKGROUNDS.length)]
+}
 
 /**
  * Interface utilisateur pour Ghost Frame
  */
 export class MisterWhiteGameUI implements GameUI {
   private container: HTMLElement | null = null
+  /** URLs d'images déjà préchargées en cache navigateur */
+  private preloadedImageUrls = new Set<string>()
   
   setContainer(container: HTMLElement): void {
     this.container = container
@@ -76,6 +94,7 @@ export class MisterWhiteGameUI implements GameUI {
   
   onGameStateUpdate(gameState: any): void {
     const state = gameState as MisterWhiteGameState
+    this.preloadGameImages(state)
     
     // Re-rendre complètement l'interface lors d'un changement d'état
     if (this.container) {
@@ -104,30 +123,33 @@ export class MisterWhiteGameUI implements GameUI {
   private renderLoadingScreen(state: MisterWhiteGameState): HTMLElement {
     const screen = document.createElement('div')
     screen.className = 'mister-white-game screen-loading relative flex flex-col min-h-screen overflow-hidden'
-    
+
+    const backgroundUrl = pickRandomLoadingBackground()
+
     screen.innerHTML = `
       <img
-        src="/home-background-9x16.png"
+        src="${backgroundUrl}"
         alt=""
-        class="absolute inset-0 w-full h-full object-cover object-center"
+        class="loading-bg absolute inset-0 w-full h-full object-cover object-center"
         aria-hidden="true"
       />
-      <div class="absolute inset-0 bg-gradient-to-b from-beige-900/50 via-beige-900/25 to-beige-900/55"></div>
-      <div id="loading-flashes" class="absolute inset-0 pointer-events-none overflow-hidden z-[1]"></div>
-      <div id="screen-flash" class="absolute inset-0 bg-white pointer-events-none opacity-0 z-[2]"></div>
+      <div class="loading-color-film absolute inset-0 pointer-events-none z-[1]"></div>
+      <div class="absolute inset-0 bg-gradient-to-b from-blue-950/55 via-blue-950/25 to-blue-950/60 z-[1]"></div>
+      <div id="loading-flashes" class="absolute inset-0 pointer-events-none overflow-hidden z-[2]"></div>
+      <div id="screen-flash" class="absolute inset-0 bg-white pointer-events-none opacity-0 z-[3]"></div>
 
       <div class="relative z-10 text-center w-full flex flex-col items-center justify-center min-h-screen px-6">
         <div class="mb-16 w-full">
-          <img src="/LogoGF.png" alt="Ghost Frame Logo" class="w-full max-w-md mx-auto drop-shadow-2xl animate-pulse" />
+          <img src="/LogoGF-styled-sd.png" alt="Ghost Frame Logo" class="w-full max-w-md mx-auto drop-shadow-2xl animate-pulse" />
         </div>
 
         <div class="progress-container mb-4 max-w-lg mx-auto w-full">
-          <div class="w-full bg-beige-300/50 rounded-full h-2 backdrop-blur-sm">
-            <div id="loading-progress" class="bg-gradient-to-r from-primary-400 to-primary-500 h-2 rounded-full transition-all duration-100 shadow-lg shadow-primary-500/30" style="width: 0%"></div>
+          <div class="w-full bg-blue-200/25 rounded-full h-2 backdrop-blur-sm">
+            <div id="loading-progress" class="bg-gradient-to-r from-blue-400 to-blue-500 h-2 rounded-full transition-all duration-100 shadow-lg shadow-blue-500/40" style="width: 0%"></div>
           </div>
         </div>
 
-        <p class="text-beige-100 text-lg drop-shadow-md font-medium">Chargement en cours...</p>
+        <p class="text-white text-lg drop-shadow-md font-medium">Chargement en cours...</p>
       </div>
     `
     
@@ -140,18 +162,20 @@ export class MisterWhiteGameUI implements GameUI {
     const screen = document.createElement('div')
     screen.className = 'mister-white-game screen-home relative flex flex-col items-center justify-center min-h-screen overflow-hidden'
 
+    const backgroundUrl = pickRandomLoadingBackground()
+
     screen.innerHTML = `
       <img
-        src="/home-background-9x16.png"
+        src="${backgroundUrl}"
         alt=""
-        class="absolute inset-0 w-full h-full object-cover object-center"
+        class="loading-bg absolute inset-0 w-full h-full object-cover object-center"
         aria-hidden="true"
       />
-      <div class="absolute inset-0 bg-gradient-to-b from-beige-100/75 via-beige-50/80 to-beige-100/85 backdrop-blur-[2px]"></div>
+      <div class="absolute inset-0 bg-gradient-to-b from-white/32 via-white/38 to-white/44 backdrop-blur-[0.5px] z-[1]"></div>
 
       <div class="relative z-10 w-full max-w-sm flex flex-col items-center justify-center flex-1 px-4 py-6">
-        <img src="/LogoGF.png" alt="Ghost Frame" class="w-full max-w-[220px] h-auto object-contain mx-auto drop-shadow-2xl mb-4" />
-        <p class="text-beige-800 text-sm text-center mb-8 leading-snug font-medium drop-shadow-sm">
+        <img src="/LogoGF-styled-sd.png" alt="Ghost Frame" class="w-full max-w-[220px] h-auto object-contain mx-auto drop-shadow-2xl mb-4" />
+        <p class="text-white text-sm text-center mb-8 leading-snug font-semibold [text-shadow:0_1px_4px_rgba(0,0,0,0.55)]">
           Jeu de déduction et de bluff<br>Qui a la bonne photo ?
         </p>
 
@@ -159,21 +183,21 @@ export class MisterWhiteGameUI implements GameUI {
           <button
             id="start-game-btn"
             type="button"
-            class="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold py-4 px-6 rounded-xl text-lg transition-all transform hover:scale-[1.02] hover:shadow-xl hover:shadow-primary-500/25"
+            class="w-full bg-[#2E6BB0] hover:bg-[#255a96] text-white font-bold py-4 px-6 rounded-xl text-lg transition-all transform hover:scale-[1.02] hover:shadow-xl hover:shadow-[#2E6BB0]/30"
           >
             Démarrer une partie
           </button>
           <button
             id="show-rules-btn"
             type="button"
-            class="w-full border-2 border-beige-400/80 bg-beige-50/90 hover:bg-beige-100 text-beige-900 font-semibold py-3.5 px-6 rounded-xl text-base transition-all backdrop-blur-sm shadow-sm"
+            class="w-full border-2 border-[#B9D4EF] bg-[#D8E8F7]/95 hover:bg-[#c9def2] text-[#12283F] font-semibold py-3.5 px-6 rounded-xl text-base transition-all backdrop-blur-sm shadow-sm"
           >
             Règles du jeu
           </button>
           <button
             id="share-game-btn"
             type="button"
-            class="w-full border-2 border-beige-400/80 bg-beige-50/90 hover:bg-beige-100 text-beige-900 font-semibold py-3.5 px-6 rounded-xl text-base transition-all backdrop-blur-sm shadow-sm"
+            class="w-full border-2 border-[#B9D4EF] bg-[#D8E8F7]/95 hover:bg-[#c9def2] text-[#12283F] font-semibold py-3.5 px-6 rounded-xl text-base transition-all backdrop-blur-sm shadow-sm"
           >
             Partager le jeu
           </button>
@@ -333,7 +357,7 @@ export class MisterWhiteGameUI implements GameUI {
     screen.className = 'mister-white-game screen-config w-full px-2 pt-0 pb-4 max-w-md mx-auto'
     
     screen.innerHTML = `
-      <img src="/LogoGF.png" alt="Ghost Frame" class="w-full max-w-lg h-44 object-contain mx-auto drop-shadow-lg" />
+      <img src="/LogoGF-styled-sd.png" alt="Ghost Frame" class="w-full max-w-lg h-44 object-contain mx-auto drop-shadow-lg" />
       <div class="flex items-center justify-center mb-1">
         <span class="text-xl mr-2">⚙️</span>
         <h2 class="text-lg font-bold text-beige-900">CONFIGURATION</h2>
@@ -357,29 +381,16 @@ export class MisterWhiteGameUI implements GameUI {
         
         <div>
           <label class="block text-beige-800 text-sm font-semibold mb-3 uppercase tracking-wide">
-            Paire de photos (dossier images)
+            Parties déjà jouées (joueur le plus expérimenté)
           </label>
-          <select 
-            id="pair-select"
+          <input 
+            type="number" 
+            id="games-played" 
+            min="0"
+            value="${getStoredGamesPlayed()}"
             class="w-full px-4 py-3 bg-beige-100 border-2 border-beige-400 text-beige-900 rounded-xl text-lg focus:outline-none focus:border-primary-500 focus:shadow-lg focus:shadow-primary-500/20 transition-all"
           >
-            <option value="">Chargement…</option>
-          </select>
-          <p class="text-beige-600 text-xs mt-1">Les paires sont lues depuis public/images-v2/pairs.json et public/images-v2/paire-XX/</p>
-        </div>
-        
-        <div>
-          <label class="block text-beige-800 text-sm font-semibold mb-3 uppercase tracking-wide">
-            Difficulté
-          </label>
-          <select 
-            id="difficulty-select"
-            class="w-full px-4 py-3 bg-beige-100 border-2 border-beige-400 text-beige-900 rounded-xl text-lg focus:outline-none focus:border-primary-500 focus:shadow-lg focus:shadow-primary-500/20 transition-all"
-          >
-            <option value="easy" ${state.config.difficulty === 'easy' ? 'selected' : ''}>😊 Facile</option>
-            <option value="medium" ${state.config.difficulty === 'medium' ? 'selected' : ''}>🤔 Moyen</option>
-            <option value="hard" ${state.config.difficulty === 'hard' ? 'selected' : ''}>😈 Difficile</option>
-          </select>
+          <p id="games-played-hint" class="text-beige-600 text-xs mt-1">Les paires déjà vues sont ignorées : la partie démarre à la paire suivante.</p>
         </div>
         
         <div>
@@ -418,7 +429,7 @@ export class MisterWhiteGameUI implements GameUI {
     const allConfigured = configuredCount === state.config.playerCount
     
     screen.innerHTML = `
-      <img src="/LogoGF.png" alt="Ghost Frame" class="w-full max-w-lg h-44 object-contain mx-auto drop-shadow-lg" />
+      <img src="/LogoGF-styled-sd.png" alt="Ghost Frame" class="w-full max-w-lg h-44 object-contain mx-auto drop-shadow-lg" />
       <div class="flex items-center justify-center mb-1">
         <span class="text-xl mr-2">🃏</span>
         <h2 class="text-lg font-bold text-beige-900">SETUP DES CARTES</h2>
@@ -462,7 +473,7 @@ export class MisterWhiteGameUI implements GameUI {
     screen.className = 'mister-white-game screen-game w-full px-2 pt-0 pb-4 mx-auto'
     
     screen.innerHTML = `
-      <img src="/LogoGF.png" alt="Ghost Frame" class="w-full max-w-md h-36 object-contain mx-auto drop-shadow-lg" />
+      <img src="/LogoGF-styled-sd.png" alt="Ghost Frame" class="w-full max-w-md h-36 object-contain mx-auto drop-shadow-lg" />
       
       <div class="bg-error-100 border-2 border-error-500 rounded-xl p-2 mb-2 text-center max-w-md mx-auto">
         <p class="text-beige-800 text-xs">Premier joueur :</p>
@@ -1221,6 +1232,24 @@ export class MisterWhiteGameUI implements GameUI {
         color: #6b5b4f;
       }
 
+      .mister-white-game .loading-bg {
+        filter: saturate(1.12) contrast(1.04) brightness(0.92);
+      }
+
+      /* Film coloré léger (color grade bleu) au-dessus de l'image de fond */
+      .mister-white-game .loading-color-film {
+        background:
+          linear-gradient(135deg, rgba(46,107,176,0.40) 0%, rgba(90,160,228,0.18) 50%, rgba(12,28,52,0.45) 100%);
+        mix-blend-mode: overlay;
+        opacity: 0.7;
+        animation: loadingFilmShift 6s ease-in-out infinite alternate;
+      }
+
+      @keyframes loadingFilmShift {
+        0% { opacity: 0.55; }
+        100% { opacity: 0.85; }
+      }
+
       .mister-white-game .camera-flash {
         position: absolute;
         transform: translate(-50%, -50%);
@@ -1578,58 +1607,62 @@ export class MisterWhiteGameUI implements GameUI {
     })
   }
   
+  /** Thème des paires ordonnées (public/images-v2/pairs.json) */
+  private static readonly IMAGES_THEME = 'libre-v3'
+
   private attachConfigEventListeners(screen: HTMLElement): void {
-    const pairSelect = screen.querySelector('#pair-select') as HTMLSelectElement
-    if (pairSelect) {
-      import('@assets/images/imageRegistry').then(({ fetchAllPairs }) => {
-        fetchAllPairs().then((pairs) => {
-          pairSelect.innerHTML = ''
-          if (pairs.length === 0) {
-            pairSelect.innerHTML = '<option value="">Aucune paire (ajoutez public/images-v2/pairs.json et dossiers public/images-v2/paire-XX/)</option>'
+    const theme = MisterWhiteGameUI.IMAGES_THEME
+    const gamesPlayedInput = screen.querySelector('#games-played') as HTMLInputElement
+    const hint = screen.querySelector('#games-played-hint') as HTMLElement
+
+    // Charger le nombre total de paires pour informer sur la paire de départ
+    import('@assets/images/imageRegistry').then(({ fetchPairsForTheme }) => {
+      fetchPairsForTheme(theme).then((pairs) => {
+        const total = pairs.length
+        const updateHint = () => {
+          if (!hint) return
+          if (total === 0) {
+            hint.textContent = 'Aucune paire disponible (vérifiez public/images-v2/pairs.json).'
             return
           }
-          pairs.forEach((p) => {
-            const opt = document.createElement('option')
-            opt.value = `${p.theme}|${p.id}`
-            opt.textContent = p.label
-            pairSelect.appendChild(opt)
-          })
-        }).catch(() => {
-          pairSelect.innerHTML = '<option value="">Erreur chargement</option>'
-        })
+          const played = Math.max(0, parseInt(gamesPlayedInput?.value || '0') || 0)
+          const startNumber = (played % total) + 1
+          hint.textContent = `${total} paires disponibles. La partie démarrera à la paire ${startNumber} (les ${played} déjà vue${played > 1 ? 's' : ''} sont ignorée${played > 1 ? 's' : ''}).`
+        }
+        updateHint()
+        gamesPlayedInput?.addEventListener('input', updateHint)
+      }).catch(() => {
+        if (hint) hint.textContent = 'Erreur de chargement des paires.'
       })
-    }
+    })
 
     const validateBtn = screen.querySelector('#validate-config-btn')
     if (validateBtn) {
       validateBtn.addEventListener('click', async () => {
         const playerCount = parseInt((screen.querySelector('#player-count') as HTMLInputElement).value)
-        const pairValue = (screen.querySelector('#pair-select') as HTMLSelectElement).value
-        const difficulty = (screen.querySelector('#difficulty-select') as HTMLSelectElement).value
+        const gamesPlayed = Math.max(0, parseInt(gamesPlayedInput?.value || '0') || 0)
         const rounds = parseInt((screen.querySelector('#rounds-select') as HTMLSelectElement).value)
         
         if (playerCount < 3 || playerCount > 10) {
           alert('Le nombre de joueurs doit être entre 3 et 10!')
           return
         }
-        if (!pairValue) {
-          alert('Choisissez une paire de photos dans le dossier images.')
-          return
-        }
-        const [theme, pairId] = pairValue.split('|')
         validateBtn.setAttribute('disabled', 'true')
         ;(validateBtn as HTMLButtonElement).textContent = 'Chargement…'
-        const { getImagePairsForRounds } = await import('@assets/images/imageRegistry')
-        const imagesByRound = await getImagePairsForRounds(theme, pairId, rounds)
+        const { getImagePairsFromGamesPlayed } = await import('@assets/images/imageRegistry')
+        const imagesByRound = await getImagePairsFromGamesPlayed(theme, gamesPlayed, rounds)
         validateBtn.removeAttribute('disabled')
         ;(validateBtn as HTMLButtonElement).textContent = 'Créer les cartes →'
         if (!imagesByRound.length) {
-          alert('Impossible de charger les paires. Vérifiez public/images-v2/' + pairId + '/')
+          alert('Impossible de charger les paires. Vérifiez public/images-v2/pairs.json')
           return
         }
+        const startingPairId = imagesByRound[0].id
+        this.preloadImageUrls(this.collectImageUrlsFromPairs(imagesByRound))
+        recordGameSessionCompleted(gamesPlayed)
         this.dispatchGameAction({
           type: 'SET_CONFIG',
-          data: { playerCount, selectedPairKey: pairValue, difficulty, rounds, imagesByRound }
+          data: { playerCount, selectedPairKey: `${theme}|${startingPairId}`, rounds, imagesByRound }
         })
       })
     }
@@ -1755,11 +1788,10 @@ export class MisterWhiteGameUI implements GameUI {
   }
 
   /**
-   * Flux en 3 étapes pour Expert/Novice (1 seule à la 1re manche) :
-   * 1. Saisie du prénom — uniquement manche 1
-   * 2. Affichage de l'image en grand
-   * 3. Validation et fermeture
-   * Manches suivantes : étapes 2 et 3 seulement (prénom conservé).
+   * Flux en 2 étapes pour Expert/Novice :
+   * 1. Saisie du prénom (manche 1 uniquement)
+   * 2. Image en grand + validation
+   * Manches suivantes : étape 2 seulement.
    */
   private showImageRoleCardModal(
     cardIndex: number,
@@ -1782,22 +1814,6 @@ export class MisterWhiteGameUI implements GameUI {
         <div class="text-beige-700 text-sm">Score actuel : ${player.score || 0} pts</div>
       </div>
     ` : ''
-
-    const imageBlock = `
-      <div class="flex-1 flex items-center justify-center p-4 min-h-0 overflow-hidden">
-        <img
-          id="role-image-preview"
-          src="${imageUrl}"
-          alt="Votre image"
-          class="max-w-[95vw] max-h-[calc(100vh-180px)] w-auto h-auto object-contain rounded-xl shadow-2xl"
-          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'; console.warn('[Card] Échec chargement image:', this.src)"
-        >
-        <div class="hidden flex-col items-center justify-center p-8 text-white min-h-[200px]">
-          <div class="text-6xl mb-4">🖼️</div>
-          <p class="text-lg">Image non disponible</p>
-        </div>
-      </div>
-    `
 
     const closeModal = () => {
       document.body.removeChild(modal)
@@ -1833,19 +1849,39 @@ export class MisterWhiteGameUI implements GameUI {
       closeModal()
     }
 
-    const attachImageLogs = () => {
-      const roleImage = modal.querySelector('#role-image-preview') as HTMLImageElement
-      if (roleImage) {
-        roleImage.addEventListener('load', () => console.log('[Card] Image chargée:', roleImage.src))
-        roleImage.addEventListener('error', () => console.warn('[Card] Échec chargement image:', roleImage.src))
-      }
-    }
+    const renderImageStep = () => {
+      modal.className = 'fixed inset-0 bg-black/95 z-50 flex flex-col'
+      modal.innerHTML = `
+        <div class="flex-1 flex items-center justify-center p-4 min-h-0 overflow-hidden">
+          <img
+            id="role-image-preview"
+            src="${imageUrl}"
+            alt="Votre image"
+            class="max-w-[95vw] max-h-[calc(100vh-180px)] w-auto h-auto object-contain rounded-xl shadow-2xl"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'; console.warn('[Card] Échec chargement image:', this.src)"
+          >
+          <div class="hidden flex-col items-center justify-center p-8 text-white min-h-[200px]">
+            <div class="text-6xl mb-4">🖼️</div>
+            <p class="text-lg">Image non disponible</p>
+          </div>
+        </div>
+        <div class="flex-shrink-0 bg-beige-200 border-t border-beige-400 p-4 space-y-3">
+          ${newRoundBanner}
+          ${!skipNameStep ? '<p class="text-beige-600 text-xs text-center">Étape 2 / 2</p>' : ''}
+          <p class="text-beige-800 text-sm text-center font-semibold">Mémorisez bien votre image !</p>
+          <div class="flex space-x-3">
+            <button id="confirm-card-btn" class="flex-1 bg-gradient-to-r from-success-500 to-success-600 hover:from-success-600 hover:to-success-700 text-white font-bold py-3 px-6 rounded-xl transition-all">
+              ✅ ${skipNameStep ? 'J\'ai vu mon rôle' : 'Valider'}
+            </button>
+            <button id="cancel-card-btn" class="flex-1 bg-gradient-to-r from-beige-500 to-beige-600 hover:from-beige-600 hover:to-beige-700 text-white font-bold py-3 px-6 rounded-xl transition-all">
+              ❌ Annuler
+            </button>
+          </div>
+        </div>
+      `
 
-    const stepLabel = (viewStep: 2 | 3): string => {
-      if (skipNameStep) {
-        return viewStep === 2 ? 'Étape 1 / 2' : 'Étape 2 / 2'
-      }
-      return viewStep === 2 ? 'Étape 2 / 3' : 'Étape 3 / 3'
+      modal.querySelector('#confirm-card-btn')?.addEventListener('click', confirmCard)
+      modal.querySelector('#cancel-card-btn')?.addEventListener('click', closeModal)
     }
 
     const renderStep = () => {
@@ -1854,7 +1890,7 @@ export class MisterWhiteGameUI implements GameUI {
         modal.innerHTML = `
           <div class="bg-beige-200 rounded-2xl p-6 border border-beige-400 max-w-md w-full mx-4">
             <div class="text-center mb-6">
-              <p class="text-beige-600 text-sm mb-2">Étape 1 / 3</p>
+              <p class="text-beige-600 text-sm mb-2">Étape 1 / 2</p>
               <h3 class="text-xl font-bold text-beige-900">Qui êtes-vous ?</h3>
               <p class="text-beige-700 text-sm mt-2">Entrez votre prénom avant de découvrir votre image.</p>
             </div>
@@ -1872,7 +1908,7 @@ export class MisterWhiteGameUI implements GameUI {
               </div>
               <div class="flex space-x-3">
                 <button id="next-step-btn" class="flex-1 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold py-3 px-6 rounded-xl transition-all">
-                  Continuer →
+                  Voir mon image →
                 </button>
                 <button id="cancel-card-btn" class="flex-1 bg-gradient-to-r from-beige-500 to-beige-600 hover:from-beige-600 hover:to-beige-700 text-white font-bold py-3 px-6 rounded-xl transition-all">
                   ❌ Annuler
@@ -1889,7 +1925,7 @@ export class MisterWhiteGameUI implements GameUI {
           if (!validateName()) return
           nameInput?.blur()
           step = 2
-          renderStep()
+          renderImageStep()
         }
 
         modal.querySelector('#next-step-btn')?.addEventListener('click', goToImage)
@@ -1900,54 +1936,38 @@ export class MisterWhiteGameUI implements GameUI {
         return
       }
 
-      modal.className = 'fixed inset-0 bg-black/95 z-50 flex flex-col'
-
-      if (step === 2) {
-        modal.innerHTML = `
-          ${imageBlock}
-          <div class="flex-shrink-0 bg-beige-200 border-t border-beige-400 p-4 space-y-3">
-            ${newRoundBanner}
-            <p class="text-beige-600 text-xs text-center">${stepLabel(2)}</p>
-            <p class="text-beige-800 text-sm text-center font-semibold">Mémorisez bien votre image !</p>
-            <button id="next-step-btn" class="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold py-3 px-6 rounded-xl transition-all">
-              J'ai mémorisé →
-            </button>
-          </div>
-        `
-
-        attachImageLogs()
-        modal.querySelector('#next-step-btn')?.addEventListener('click', () => {
-          step = 3
-          renderStep()
-        })
-        return
-      }
-
-      modal.innerHTML = `
-        ${imageBlock}
-        <div class="flex-shrink-0 bg-beige-200 border-t border-beige-400 p-4 space-y-3">
-          ${newRoundBanner}
-          <p class="text-beige-600 text-xs text-center">${stepLabel(3)}</p>
-          <p class="text-beige-800 text-sm text-center">
-            Prêt à valider votre carte, <strong class="text-beige-900">${savedPlayerName}</strong> ?
-          </p>
-          <div class="flex space-x-3">
-            <button id="confirm-card-btn" class="flex-1 bg-gradient-to-r from-success-500 to-success-600 hover:from-success-600 hover:to-success-700 text-white font-bold py-3 px-6 rounded-xl transition-all">
-              ✅ ${skipNameStep ? 'J\'ai vu mon rôle' : 'Valider'}
-            </button>
-            <button id="cancel-card-btn" class="flex-1 bg-gradient-to-r from-beige-500 to-beige-600 hover:from-beige-600 hover:to-beige-700 text-white font-bold py-3 px-6 rounded-xl transition-all">
-              ❌ Annuler
-            </button>
-          </div>
-        </div>
-      `
-
-      attachImageLogs()
-      modal.querySelector('#confirm-card-btn')?.addEventListener('click', confirmCard)
-      modal.querySelector('#cancel-card-btn')?.addEventListener('click', closeModal)
+      renderImageStep()
     }
 
+    this.preloadImageUrls([imageUrl])
     renderStep()
+  }
+
+  /** Précharge les images de toutes les manches pour affichage instantané */
+  private preloadGameImages(state: MisterWhiteGameState): void {
+    const urls = this.collectImageUrlsFromPairs(state.gameData.imagesByRound ?? [])
+    const current = state.gameData.currentImages
+    if (current?.civil) urls.push(current.civil)
+    if (current?.impostor) urls.push(current.impostor)
+    this.preloadImageUrls(urls)
+  }
+
+  private collectImageUrlsFromPairs(pairs: Array<{ civil: string; impostor: string }>): string[] {
+    const urls: string[] = []
+    for (const pair of pairs) {
+      if (pair.civil) urls.push(pair.civil)
+      if (pair.impostor) urls.push(pair.impostor)
+    }
+    return urls
+  }
+
+  private preloadImageUrls(urls: string[]): void {
+    for (const url of urls) {
+      if (!url || this.preloadedImageUrls.has(url)) continue
+      this.preloadedImageUrls.add(url)
+      const img = new Image()
+      img.src = url
+    }
   }
 
   private attachCardConfigListeners(
@@ -2388,3 +2408,4 @@ export class MisterWhiteGameUI implements GameUI {
     }
   }
 }
+

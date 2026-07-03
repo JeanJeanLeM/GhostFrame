@@ -1,0 +1,36 @@
+{
+  "pairs": [
+    {
+      "id": "paire-01",
+      "theme": "Concert pop",
+      "expert": "expert-pop-star.png",
+      "novice": "novice-security.png",
+      "fantome": "fantome-vide.png",
+      "scene": "scene-overview.png"
+    },
+    {
+      "id": "paire-02",
+      "theme": "Match de foot",
+      "expert": "expert-football.png",
+      "novice": "novice-vendor.png",
+      "fantome": "fantome-vide.png",
+      "scene": "scene-overview.png"
+    },
+    {
+      "id": "paire-03",
+      "theme": "Tapis rouge",
+      "expert": "expert-redcarpet.png",
+      "novice": "novice-valet.png",
+      "fantome": "fantome-vide.png",
+      "scene": "scene-overview.png"
+    },
+    {
+      "id": "paire-04",
+      "theme": "Keynote tech",
+      "expert": "expert-keynote.png",
+      "novice": "novice-janitor.png",
+      "fantome": "fantome-vide.png",
+      "scene": "scene-overview.png"
+    }
+  ]
+}
