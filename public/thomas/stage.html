@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Thomas — motion</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #f3eee4;
+        color: #1c2430;
+        font-family: Inter, "Noto Sans", sans-serif;
+      }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+      .scene {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        grid-template-columns: 680px 1fr;
+        gap: 36px;
+        align-items: center;
+        padding: 84px 88px;
+        opacity: 0;
+      }
+      .kicker {
+        margin: 0 0 18px;
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: #2e6bb0;
+      }
+      h1 {
+        margin: 0;
+        font-size: 78px;
+        line-height: 0.96;
+        letter-spacing: -0.045em;
+        font-weight: 720;
+      }
+      .lede {
+        margin: 22px 0 0;
+        max-width: 560px;
+        font-size: 28px;
+        line-height: 1.35;
+        color: #4d5b6a;
+        font-weight: 450;
+      }
+      .frame {
+        height: 760px;
+        border-radius: 36px;
+        background: #f7f3ea;
+        box-shadow: 0 24px 60px rgba(28, 36, 48, 0.08);
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform-origin: 50% 45%;
+      }
+      .frame.portrait img { object-fit: contain; padding: 24px; }
+      .end {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        text-align: center;
+      }
+      .end .lede { margin-left: auto; margin-right: auto; }
+      .end .portrait {
+        width: 420px;
+        height: 520px;
+        margin-bottom: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage">
+      <section class="scene" id="scene-intro">
+        <div>
+          <p class="kicker" data-child="0">Thomas</p>
+          <h1 data-child="0.06">Ghost Frame,<br />version canapé.</h1>
+          <p class="lede" data-child="0.16">Un téléphone. Des photos.<br />Un joueur qui n’en a pas.</p>
+        </div>
+        <div class="frame portrait" data-child="0.08"><img id="hero" src="/thomas/thomas-hero.png" alt="" /></div>
+      </section>
+
+      <section class="scene" id="scene-cards">
+        <div>
+          <p class="kicker">01 — Les cartes</p>
+          <h1 data-child="0.05">Chacun découvre la sienne.</h1>
+          <p class="lede" data-child="0.14">L’Expert a la vraie scène. Le Novice, presque. Le Fantôme, une carte SD vide.</p>
+        </div>
+        <div class="frame" data-child="0.08"><img src="/thomas/thomas-phase-cards.png" alt="" /></div>
+      </section>
+
+      <section class="scene" id="scene-word">
+        <div>
+          <p class="kicker">02 — Un mot</p>
+          <h1 data-child="0.05">Un mot. Pas un discours.</h1>
+          <p class="lede" data-child="0.14">On passe le téléphone, on décrit sa photo, on rend l’appareil.</p>
+        </div>
+        <div class="frame" data-child="0.08"><img src="/thomas/thomas-phase-word.png" alt="" /></div>
+      </section>
+
+      <section class="scene" id="scene-debate">
+        <div>
+          <p class="kicker">03 — On discute</p>
+          <h1 data-child="0.05">Ensuite, on se méfie.</h1>
+          <p class="lede" data-child="0.14">Les détails qui ne collent pas sentent le bluff.</p>
+        </div>
+        <div class="frame" data-child="0.08"><img src="/thomas/thomas-phase-debate.png" alt="" /></div>
+      </section>
+
+      <section class="scene" id="scene-vote">
+        <div>
+          <p class="kicker">04 — On élimine</p>
+          <h1 data-child="0.05">On désigne quelqu’un.</h1>
+          <p class="lede" data-child="0.14">Le rôle est révélé. Thomas transpire un peu.</p>
+        </div>
+        <div class="frame" data-child="0.08"><img src="/thomas/thomas-phase-vote.png" alt="" /></div>
+      </section>
+
+      <section class="scene" id="scene-guess">
+        <div>
+          <p class="kicker">05 — Le Fantôme</p>
+          <h1 data-child="0.05">Dernière chance.</h1>
+          <p class="lede" data-child="0.14">S’il est éliminé, il peut encore deviner la scène.</p>
+        </div>
+        <div class="frame" data-child="0.08"><img src="/thomas/thomas-phase-guess.png" alt="" /></div>
+      </section>
+
+      <section class="scene" id="scene-score">
+        <div>
+          <p class="kicker">06 — Les scores</p>
+          <h1 data-child="0.05">Quelqu’un repart avec ça.</h1>
+          <p class="lede" data-child="0.14">Experts, Novices, ou le Fantôme. Rarement tout le monde.</p>
+        </div>
+        <div class="frame" data-child="0.08"><img src="/thomas/thomas-phase-score.png" alt="" /></div>
+      </section>
+
+      <section class="scene end" id="scene-end">
+        <div class="frame portrait" data-child="0"><img src="/thomas/thomas-hero.png" alt="" /></div>
+        <div>
+          <p class="kicker" data-child="0.08">Ghost Frame</p>
+          <h1 data-child="0.12">On joue quand vous voulez.</h1>
+          <p class="lede" data-child="0.2">3 à 10 joueurs · Un seul téléphone</p>
+        </div>
+      </section>
+    </div>
+    <script>
+      window.MOTION_DURATION = 26
+      const scenes = [
+        { id: 'scene-intro', inn: 0.15, full: 0.7, out: 3.15, end: 3.7 },
+        { id: 'scene-cards', inn: 3.35, full: 3.9, out: 6.7, end: 7.25 },
+        { id: 'scene-word', inn: 6.9, full: 7.45, out: 10.05, end: 10.6 },
+        { id: 'scene-debate', inn: 10.25, full: 10.8, out: 13.45, end: 14.0 },
+        { id: 'scene-vote', inn: 13.65, full: 14.2, out: 16.85, end: 17.4 },
+        { id: 'scene-guess', inn: 17.05, full: 17.6, out: 20.2, end: 20.75 },
+        { id: 'scene-score', inn: 20.4, full: 20.95, out: 23.15, end: 23.7 },
+        { id: 'scene-end', inn: 23.35, full: 23.95, out: 26, end: 26 }
+      ]
+      const images = [...document.querySelectorAll('.frame img')]
+
+      function clamp01(value) { return Math.max(0, Math.min(1, value)) }
+      function easeOut(value) { return 1 - Math.pow(1 - clamp01(value), 3) }
+      function fade(t, inn, full, out, end) {
+        if (t <= inn || t >= end) return 0
+        if (t < full) return easeOut((t - inn) / (full - inn))
+        if (t < out) return 1
+        return 1 - easeOut((t - out) / (end - out))
+      }
+      function place(el, t, inn, full, out, end) {
+        const opacity = fade(t, inn, full, out, end)
+        const enter = easeOut((t - inn) / Math.max(0.001, full - inn))
+        el.style.opacity = String(opacity)
+        el.style.transform = `translateY(${(1 - enter) * 28}px)`
+      }
+
+      window.seek = function seek(time) {
+        const t = Math.max(0, Math.min(window.MOTION_DURATION, time))
+        images.forEach((img) => {
+          img.style.transform = `scale(${1.04 + Math.sin(t * 0.7) * 0.015})`
+        })
+        for (const scene of scenes) {
+          const node = document.getElementById(scene.id)
+          const opacity = fade(t, scene.inn, scene.full, scene.out, scene.end)
+          node.style.opacity = String(opacity)
+          node.style.visibility = opacity < 0.01 ? 'hidden' : 'visible'
+          node.querySelectorAll('[data-child]').forEach((child) => {
+            place(child, t, scene.inn + Number(child.dataset.child), scene.full + Number(child.dataset.child), scene.out, scene.end)
+          })
+        }
+        return t
+      }
+
+      window.ready = async function ready() {
+        await Promise.all(images.map((img) => (img.complete ? Promise.resolve() : img.decode().catch(() => {}))))
+        window.seek(0)
+        return true
+      }
+
+      const initial = new URLSearchParams(location.search).get('t')
+      window.ready().then(() => { if (initial !== null) window.seek(Number(initial)) })
+    </script>
+  </body>
+</html>

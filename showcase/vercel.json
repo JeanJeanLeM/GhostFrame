@@ -1,0 +1,11 @@
+{
+  "cleanUrls": true,
+  "headers": [
+    {
+      "source": "/exports/(.*)",
+      "headers": [
+        { "key": "Accept-Ranges", "value": "bytes" }
+      ]
+    }
+  ]
+}

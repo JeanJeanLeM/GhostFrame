@@ -1,0 +1,31 @@
+{
+  "eyebrow": "Ghost Frame · motions",
+  "title": "Les motions à voir et à télécharger.",
+  "intro": "Les films déposés par les agents, rangés par projet. Chaque section est un dossier.",
+  "sections": [
+    {
+      "id": "ghostframe",
+      "title": "Ghost Frame",
+      "films": [
+        {
+          "file": "ghostframe/ghostframe-motion.mp4",
+          "poster": "ghostframe/poster.jpg",
+          "title": "Motion d'ouverture",
+          "text": "Logo, rôles, comparaison de photos, un seul téléphone."
+        }
+      ]
+    },
+    {
+      "id": "thomas",
+      "title": "Thomas",
+      "films": [
+        {
+          "file": "thomas/thomas-ghostframe.mp4",
+          "poster": "thomas/poster.jpg",
+          "title": "Les phases du jeu",
+          "text": "Cartes, un mot, discussion, élimination, devinette, scores."
+        }
+      ]
+    }
+  ]
+}
