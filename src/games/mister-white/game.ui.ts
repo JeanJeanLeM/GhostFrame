@@ -207,6 +207,12 @@ export class MisterWhiteGameUI implements GameUI {
           >
             Voir le motion design
           </a>
+          <a
+            href="/thomas/"
+            class="text-center text-white/95 text-sm font-semibold underline underline-offset-4 decoration-white/70 hover:decoration-white [text-shadow:0_1px_4px_rgba(0,0,0,0.55)]"
+          >
+            Le film de Thomas
+          </a>
         </div>
       </div>
     `

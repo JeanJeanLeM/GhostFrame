@@ -6,6 +6,9 @@ const serveMotionIndex: Connect.NextHandleFunction = (req, _res, next) => {
   if (path === '/motion' || path === '/motion/') {
     req.url = '/motion/index.html'
   }
+  if (path === '/thomas' || path === '/thomas/') {
+    req.url = '/thomas/index.html'
+  }
   next()
 }
 
