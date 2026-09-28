@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vidéos — Ghost Frame</title>
+    <link rel="icon" href="/ghost-frame-icon-32.png" />
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #f3eee4;
+        color: #1c2430;
+        font-family: Inter, "Noto Sans", sans-serif;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        min-height: 100vh;
+      }
+      nav {
+        padding: 28px 18px;
+        border-right: 1px solid #e4dccf;
+        background: #f7f3ea;
+      }
+      nav a.home {
+        color: #2e6bb0;
+        font-weight: 700;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      nav h1 {
+        margin: 22px 0 6px;
+        font-size: 28px;
+        letter-spacing: -0.04em;
+      }
+      nav p { margin: 0 0 18px; color: #5c6b7a; font-size: 14px; line-height: 1.4; }
+      button.project {
+        display: block;
+        width: 100%;
+        text-align: left;
+        border: 0;
+        background: transparent;
+        border-radius: 14px;
+        padding: 12px;
+        cursor: pointer;
+        color: inherit;
+        font: inherit;
+      }
+      button.project strong { display: block; font-size: 16px; }
+      button.project span { display: block; margin-top: 2px; color: #5c6b7a; font-size: 13px; }
+      button.project[aria-current="true"] { background: #fff; box-shadow: 0 8px 24px rgba(28, 36, 48, 0.06); }
+      main { padding: 28px; }
+      .player {
+        background: white;
+        border-radius: 24px;
+        padding: 12px;
+        box-shadow: 0 18px 50px rgba(28, 36, 48, 0.08);
+      }
+      video { width: 100%; display: block; border-radius: 16px; background: #111; }
+      .bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 16px; }
+      h2 { margin: 0; font-size: 32px; letter-spacing: -0.04em; }
+      .desc { margin: 6px 0 0; color: #4d5b6a; max-width: 640px; }
+      .download, .step {
+        display: inline-flex;
+        align-items: center;
+        min-height: 46px;
+        padding: 0 16px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 750;
+        border: 0;
+        cursor: pointer;
+        font: inherit;
+      }
+      .download { background: #2e6bb0; color: white; }
+      .step { background: transparent; border: 1.5px solid #d9d0c2; color: #1c2430; }
+      .meta { margin-left: auto; color: #5c6b7a; font-size: 14px; }
+      #status { color: #8a3d2e; }
+      @media (max-width: 800px) {
+        .layout { grid-template-columns: 1fr; }
+        nav { border-right: 0; border-bottom: 1px solid #e4dccf; }
+        .meta { margin-left: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <nav>
+        <a class="home" href="/">← Jeu</a>
+        <h1>Vidéos</h1>
+        <p>Tous les films déposés par les agents. Choisis un projet.</p>
+        <div id="list"></div>
+      </nav>
+      <main>
+        <p id="status" hidden></p>
+        <div class="player">
+          <video id="film" controls playsinline preload="metadata"></video>
+        </div>
+        <div class="bar">
+          <div>
+            <h2 id="title">Vidéo</h2>
+            <p class="desc" id="description"></p>
+          </div>
+        </div>
+        <div class="bar">
+          <button class="step" id="prev" type="button">Précédent</button>
+          <button class="step" id="next" type="button">Suivant</button>
+          <a class="download" id="download" href="">Télécharger</a>
+          <p class="meta" id="meta"></p>
+        </div>
+      </main>
+    </div>
+    <script>
+      const list = document.getElementById('list')
+      const film = document.getElementById('film')
+      const title = document.getElementById('title')
+      const description = document.getElementById('description')
+      const download = document.getElementById('download')
+      const meta = document.getElementById('meta')
+      const status = document.getElementById('status')
+      let projects = []
+      let index = 0
+
+      function show(nextIndex) {
+        if (!projects.length) return
+        index = (nextIndex + projects.length) % projects.length
+        const project = projects[index]
+        location.hash = project.id
+        title.textContent = project.title
+        description.textContent = project.film + ' — ' + project.description
+        meta.textContent = project.duration || ''
+        download.href = project.src
+        download.setAttribute('download', project.src.split('/').pop())
+        if (film.getAttribute('src') !== project.src) {
+          film.poster = project.poster || ''
+          film.src = project.src
+        }
+        ;[...list.children].forEach((button, buttonIndex) => {
+          button.setAttribute('aria-current', buttonIndex === index ? 'true' : 'false')
+        })
+      }
+
+      fetch('/videos/catalog.json')
+        .then((response) => {
+          if (!response.ok) throw new Error('Catalogue introuvable')
+          return response.json()
+        })
+        .then((catalog) => {
+          projects = catalog.projects || []
+          if (!projects.length) throw new Error('Aucune vidéo dans le catalogue')
+          projects.forEach((project, projectIndex) => {
+            const button = document.createElement('button')
+            button.type = 'button'
+            button.className = 'project'
+            button.innerHTML = '<strong></strong><span></span>'
+            button.querySelector('strong').textContent = project.title
+            button.querySelector('span').textContent = project.film
+            button.addEventListener('click', () => show(projectIndex))
+            list.appendChild(button)
+          })
+          const wanted = location.hash.replace('#', '')
+          const found = projects.findIndex((project) => project.id === wanted)
+          show(found >= 0 ? found : 0)
+        })
+        .catch((error) => {
+          status.hidden = false
+          status.textContent = error.message
+        })
+
+      document.getElementById('prev').addEventListener('click', () => show(index - 1))
+      document.getElementById('next').addEventListener('click', () => show(index + 1))
+      window.addEventListener('hashchange', () => {
+        const wanted = location.hash.replace('#', '')
+        const found = projects.findIndex((project) => project.id === wanted)
+        if (found >= 0 && found !== index) show(found)
+      })
+    </script>
+  </body>
+</html>
