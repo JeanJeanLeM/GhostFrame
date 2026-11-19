@@ -1,0 +1,22 @@
+{
+  "projects": [
+    {
+      "id": "ghostframe",
+      "title": "Ghost Frame",
+      "film": "Motion d'ouverture",
+      "description": "Logo, rôles, comparaison de photos, puis la partie sur un seul téléphone.",
+      "src": "/motion/ghostframe-motion.mp4",
+      "poster": "/motion/poster.jpg",
+      "duration": "20 s"
+    },
+    {
+      "id": "thomas",
+      "title": "Thomas",
+      "film": "Les phases du jeu",
+      "description": "Thomas déroule les cartes, un mot, la discussion, l'élimination, la devinette et les scores.",
+      "src": "/thomas/thomas-ghostframe.mp4",
+      "poster": "/thomas/poster.jpg",
+      "duration": "26 s"
+    }
+  ]
+}

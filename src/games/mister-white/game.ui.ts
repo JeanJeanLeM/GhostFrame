@@ -201,6 +201,12 @@ export class MisterWhiteGameUI implements GameUI {
           >
             Partager le jeu
           </button>
+          <a
+            href="/videos/"
+            class="mt-1 text-center text-white/95 text-sm font-semibold underline underline-offset-4 decoration-white/70 hover:decoration-white [text-shadow:0_1px_4px_rgba(0,0,0,0.55)]"
+          >
+            Vidéos
+          </a>
         </div>
       </div>
     `

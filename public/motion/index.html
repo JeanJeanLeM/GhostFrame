@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ghost Frame — Motion design</title>
+    <meta name="description" content="Film de présentation de Ghost Frame. Regarder et télécharger la vidéo." />
+    <link rel="icon" href="/ghost-frame-icon-32.png" />
+    <style>
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        background: #07111c;
+        color: #f6f1e7;
+        font-family: Inter, "Noto Sans", sans-serif;
+      }
+      body {
+        min-height: 100vh;
+        background:
+          radial-gradient(ellipse at 50% 0%, rgba(46, 107, 176, 0.35), transparent 46%),
+          #07111c;
+      }
+      .wrap {
+        width: min(1100px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 28px 0 64px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 28px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        color: inherit;
+        text-decoration: none;
+      }
+      .brand img { width: 72px; height: auto; }
+      .brand strong { display: block; font-size: 18px; letter-spacing: -0.03em; }
+      .brand span { display: block; margin-top: 2px; color: #b7c3d1; font-size: 13px; }
+      .back {
+        color: #e7c98a;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 650;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: clamp(32px, 5vw, 56px);
+        letter-spacing: -0.04em;
+        line-height: 0.95;
+      }
+      .intro {
+        margin: 0 0 22px;
+        max-width: 640px;
+        color: #d5deea;
+        font-size: 18px;
+        line-height: 1.45;
+      }
+      .player {
+        background: #0c1824;
+        border: 1px solid rgba(231, 201, 138, 0.28);
+        border-radius: 24px;
+        padding: 12px;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+      }
+      video {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: 16px;
+        background: #07111c;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        margin-top: 18px;
+      }
+      .download, .play-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 52px;
+        padding: 0 22px;
+        border-radius: 14px;
+        text-decoration: none;
+        font-weight: 750;
+        font-size: 16px;
+      }
+      .download {
+        background: #2e6bb0;
+        color: white;
+      }
+      .download:hover { background: #255a96; }
+      .play-link {
+        color: #f6f1e7;
+        border: 1.5px solid rgba(246, 241, 231, 0.35);
+      }
+      .meta {
+        margin-left: auto;
+        color: #b7c3d1;
+        font-size: 14px;
+      }
+      @media (max-width: 720px) {
+        .meta { margin-left: 0; width: 100%; }
+        header { align-items: flex-start; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <a class="brand" href="/">
+          <img src="/LogoGF-styled-sd-nobg.png" alt="" />
+          <div>
+            <strong>Ghost Frame</strong>
+            <span>Motion design</span>
+          </div>
+        </a>
+        <a class="back" href="/">← Retour au jeu</a>
+      </header>
+      <h1>Présentation du jeu</h1>
+      <p class="intro">
+        Vingt secondes pour poser les trois rôles, le bluff, et la partie qui se joue sur un seul téléphone.
+      </p>
+      <div class="player">
+        <video
+          id="film"
+          controls
+          playsinline
+          preload="metadata"
+          poster="/motion/poster.jpg"
+          src="/motion/ghostframe-motion.mp4"
+        >
+          Votre navigateur ne lit pas cette vidéo.
+          <a href="/motion/ghostframe-motion.mp4">Télécharger le film</a>.
+        </video>
+      </div>
+      <div class="actions">
+        <a class="download" id="download" href="/motion/ghostframe-motion.mp4" download="ghostframe-motion.mp4">
+          Télécharger la vidéo
+        </a>
+        <a class="play-link" href="/">Jouer une partie</a>
+        <p class="meta">Film muet · 20 s · 1920×1080</p>
+      </div>
+    </div>
+  </body>
+</html>
