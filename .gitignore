@@ -130,6 +130,9 @@ dist
 dist/
 dist-ssr/
 
+# Vercel
+.vercel
+
 # IDE
 .vscode/
 .idea/
