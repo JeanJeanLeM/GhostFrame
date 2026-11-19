@@ -2,6 +2,7 @@ import { ErrorHandler } from '@core/errorHandler'
 import { MisterWhiteGameUI } from '@games/mister-white/game.ui'
 import { MisterWhiteGameLogic } from '@games/mister-white/game.logic'
 import { createInitialGameState, MisterWhiteAction } from '@games/mister-white/game.state'
+import { ShopUI } from '@/shop/shop.ui'
 
 /**
  * Application dédiée au jeu Ghost Frame
@@ -12,6 +13,7 @@ export class App {
   private misterWhiteUI: MisterWhiteGameUI
   private misterWhiteLogic: MisterWhiteGameLogic
   private misterWhiteState: any
+  private shopOpen = false
 
   constructor() {
     this.container = document.getElementById('app')!
@@ -30,6 +32,10 @@ export class App {
     document.addEventListener('ghost-frame-action', (event: any) => {
       this.handleMisterWhiteAction(event.detail)
     })
+
+    document.addEventListener('ghost-frame-open-shop', () => {
+      this.openShop()
+    })
     
     // Démarrer directement le jeu
     this.renderMisterWhite()
@@ -43,8 +49,10 @@ export class App {
       if (this.misterWhiteLogic.validateMove(this.misterWhiteState, 'local-player', action)) {
         this.misterWhiteState = this.misterWhiteLogic.processMove(this.misterWhiteState, 'local-player', action)
         
-        // Re-rendre l'interface avec les event listeners
-        this.misterWhiteUI.onGameStateUpdate(this.misterWhiteState)
+        // La boutique recouvre l'accueil : ne pas l'effacer si une action de jeu arrive.
+        if (!this.shopOpen) {
+          this.misterWhiteUI.onGameStateUpdate(this.misterWhiteState)
+        }
         
         // Vérifier les conditions de victoire
         const winCondition = this.misterWhiteLogic.checkWinCondition(this.misterWhiteState)
@@ -78,5 +86,18 @@ export class App {
     const gameBoard = this.misterWhiteUI.renderGameBoard(this.misterWhiteState, dummyPlayer)
     this.container.innerHTML = ''
     this.container.appendChild(gameBoard)
+  }
+
+  private openShop(): void {
+    if (this.shopOpen) return
+    this.shopOpen = true
+    const shop = new ShopUI(this.container, () => this.closeShop())
+    shop.render()
+  }
+
+  private closeShop(): void {
+    if (!this.shopOpen) return
+    this.shopOpen = false
+    this.renderMisterWhite()
   }
 }
