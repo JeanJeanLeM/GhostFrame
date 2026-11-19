@@ -2,6 +2,8 @@
 
 Un jeu de déduction multi-joueurs en temps réel où civils et imposteurs s'affrontent, tandis que le Ghost Frame tente de survivre sans connaître son rôle !
 
+Site public : https://ghostframe-mocha.vercel.app (Vercel, équipe Charles' projects). Les pull requests reçoivent une preview.
+
 ## 🎯 À propos
 
 GhostFrame est une application web de jeux de soirée multi-joueurs développée avec Firebase et TypeScript. Le jeu principal est un jeu de rôles déductif où les joueurs doivent découvrir qui est qui, tandis qu'un joueur mystère (le Ghost Frame) doit survivre sans connaître son propre rôle.
