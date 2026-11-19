@@ -78,73 +78,18 @@ export class ErrorHandler {
   }
 
   private getErrorMessage(error: Error, context?: string): string {
-    // Messages d'erreur spécifiques pour Firebase
-    if (error.message.includes('auth/')) {
-      return this.getFirebaseAuthErrorMessage(error.message)
-    }
-    
-    if (error.message.includes('firestore/')) {
-      return this.getFirestoreErrorMessage(error.message)
-    }
-
-    // Messages d'erreur réseau
     if (error.message.includes('network') || error.message.includes('fetch')) {
       return 'Problème de connexion réseau. Vérifiez votre connexion internet.'
     }
 
-    // Message par défaut avec contexte
     return context ? `${context}: ${error.message}` : error.message
   }
 
   private getErrorCode(error: Error): string {
-    if (error.message.includes('auth/')) {
-      return 'AUTH_ERROR'
-    }
-    if (error.message.includes('firestore/')) {
-      return 'FIRESTORE_ERROR'
-    }
     if (error.message.includes('network')) {
       return 'NETWORK_ERROR'
     }
     return 'UNKNOWN_ERROR'
-  }
-
-  private getFirebaseAuthErrorMessage(errorMessage: string): string {
-    if (errorMessage.includes('auth/user-not-found')) {
-      return 'Utilisateur non trouvé'
-    }
-    if (errorMessage.includes('auth/wrong-password')) {
-      return 'Mot de passe incorrect'
-    }
-    if (errorMessage.includes('auth/email-already-in-use')) {
-      return 'Cette adresse email est déjà utilisée'
-    }
-    if (errorMessage.includes('auth/weak-password')) {
-      return 'Le mot de passe doit contenir au moins 6 caractères'
-    }
-    if (errorMessage.includes('auth/invalid-email')) {
-      return 'Adresse email invalide'
-    }
-    if (errorMessage.includes('auth/network-request-failed')) {
-      return 'Problème de connexion. Vérifiez votre réseau.'
-    }
-    return 'Erreur d\'authentification'
-  }
-
-  private getFirestoreErrorMessage(errorMessage: string): string {
-    if (errorMessage.includes('permission-denied')) {
-      return 'Vous n\'avez pas les permissions nécessaires'
-    }
-    if (errorMessage.includes('not-found')) {
-      return 'Données non trouvées'
-    }
-    if (errorMessage.includes('already-exists')) {
-      return 'Ces données existent déjà'
-    }
-    if (errorMessage.includes('unavailable')) {
-      return 'Service temporairement indisponible'
-    }
-    return 'Erreur de base de données'
   }
 
   private showErrorNotification(message: string, code: string): void {

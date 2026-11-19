@@ -3,8 +3,8 @@ import { Player } from '@/types'
 /**
  * Interface pour l'état spécifique du jeu template
  * 
- * Définissez ici la structure des données que votre jeu stockera
- * dans Firestore. Cette interface sera utilisée par la logique du jeu.
+ * Définissez ici la structure des données que votre jeu garde
+ * en mémoire. Cette interface sera utilisée par la logique du jeu.
  */
 export interface TemplateGameState {
   // Tour actuel (0-based)

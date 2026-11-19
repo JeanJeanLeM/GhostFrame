@@ -6,20 +6,20 @@ Site public : https://ghostframe-mocha.vercel.app (Vercel, équipe Charles' proj
 
 ## 🎯 À propos
 
-GhostFrame est une application web de jeux de soirée multi-joueurs développée avec Firebase et TypeScript. Le jeu principal est un jeu de rôles déductif où les joueurs doivent découvrir qui est qui, tandis qu'un joueur mystère (le Ghost Frame) doit survivre sans connaître son propre rôle.
+GhostFrame est un jeu de soirée joué sur un seul appareil, passé de main en main. Il n'utilise pas de base de données. Le jeu principal est un jeu de rôles déductif où les joueurs doivent découvrir qui est qui, tandis qu'un joueur mystère (le Ghost Frame) doit survivre sans connaître son propre rôle.
 
 ## ⚙️ Pile technologique
 
 - **Frontend**: Vite + TypeScript + Tailwind CSS
-- **Backend**: Firebase (Auth, Firestore, Hosting)
-- **Temps réel**: Firestore onSnapshot
+- **Hébergement**: Vercel (fichiers statiques)
 - **Tests**: Vitest
 - **Utilitaires**: QRCode, UUID
+
+Le jeu public est en mode un seul appareil. Aucune base de données.
 
 ### Versions minimales
 
 - Vite ^5.0
-- Firebase ^10.0
 - TypeScript ^5.0
 - Node.js 18+
 
@@ -36,45 +36,16 @@ cd GhostFrame
 npm install
 ```
 
-### 2. Configuration Firebase
+### 2. Lancement en développement
 
-1. Créez un projet Firebase sur [console.firebase.google.com](https://console.firebase.google.com)
-2. Activez Authentication (méthode anonyme)
-3. Activez Firestore Database
-4. Copiez la configuration Firebase
-
-```bash
-# Créer le fichier de configuration
-cp env.example .env
-
-# Éditer .env avec vos vraies valeurs Firebase
-# Ouvrez .env et remplissez les variables d'environnement
-```
-
-### 3. Configuration Firestore
-
-```bash
-# Installer Firebase CLI (si pas déjà installé)
-npm install -g firebase-tools
-
-# Se connecter à Firebase
-firebase login
-
-# Initialiser le projet (optionnel si déjà fait)
-firebase init
-
-# Déployer les règles Firestore
-firebase deploy --only firestore:rules
-```
-
-### 4. Lancement en développement
+Aucun fichier `.env` n'est nécessaire.
 
 ```bash
 # Démarrer le serveur de développement
 npm run dev
 ```
 
-L'application sera disponible sur `http://localhost:5173` (ou le port indiqué par Vite)
+L'application sera disponible sur `http://localhost:3000`.
 
 ## 🎮 Jeux disponibles
 
@@ -99,14 +70,9 @@ L'application sera disponible sur `http://localhost:5173` (ou le port indiqué p
 src/
 ├── components/          # Composants UI réutilisables
 │   ├── App.ts          # Application principale
-│   ├── GameSelector.ts # Sélecteur de jeux
-│   ├── GameLobby.ts    # Lobby de partie
-│   └── GameView.ts     # Vue de jeu
+│   └── GameSelector.ts # Sélecteur de jeux (non monté par l'app)
 ├── core/               # Modules core
-│   ├── auth.ts         # Authentification
-│   ├── firebase.ts     # Configuration Firebase
-│   ├── gameSession.ts  # Gestion des sessions
-│   ├── router.ts       # Routage
+│   ├── router.ts       # Routage (non démarré par l'app)
 │   └── errorHandler.ts # Gestion d'erreurs
 ├── games/              # Modules de jeux
 │   ├── _template/      # Template pour créer de nouveaux jeux
@@ -115,8 +81,7 @@ src/
 │   └── gameRegistry.ts # Registre des jeux
 ├── utils/              # Utilitaires
 │   ├── gameCode.ts     # Codes de partie
-│   ├── qrCode.ts       # Génération QR
-│   └── presence.ts     # Suivi de présence
+│   └── qrCode.ts       # Génération QR
 ├── types/              # Types TypeScript
 └── test/               # Tests unitaires
 ```
@@ -134,28 +99,11 @@ npm run preview          # Prévisualiser le build de production
 # Tests
 npm test                 # Lancer les tests
 npm run test:ui          # Tests avec interface UI
-
-# Firebase
-npm run firebase:emulators  # Démarrer les émulateurs Firebase
-npm run firebase:deploy     # Déployer sur Firebase
 ```
 
-## 🔐 Sécurité
+## 🔐 Données
 
-### Règles Firestore
-
-Les règles de sécurité garantissent que:
-- Seuls les utilisateurs authentifiés peuvent accéder aux parties
-- Les joueurs ne peuvent modifier que leurs propres données
-- L'hôte peut contrôler le statut de la partie
-- Les données sensibles sont protégées
-
-### Authentification
-
-- Connexion anonyme par défaut
-- Possibilité d'ajouter Google Auth ou email/password
-- Gestion automatique des sessions
-- Suivi de présence en temps réel
+La partie en cours vit dans la page. Le compteur de parties jouées est dans `localStorage` (`ghostframe-games-played`). Il n'y a pas de compte ni de base de données.
 
 ## 🧪 Tests
 
@@ -178,39 +126,20 @@ npm test -- --coverage
 ### Développement
 
 ```bash
-# Émulateurs Firebase (optionnel)
-npm run firebase:emulators
-
-# Serveur de développement
 npm run dev
 ```
 
 ### Production
 
+Le site public est https://ghostframe-mocha.vercel.app (Vercel, équipe Charles' projects). La branche `main` est la production. Chaque pull request reçoit une preview.
+
 ```bash
-# Build de production
 npm run build
-
-# Déploiement Firebase
-npm run firebase:deploy
-
-# Ou déploiement complet
-firebase deploy
 ```
 
 ### Variables d'environnement
 
-```bash
-# .env (développement)
-VITE_FIREBASE_API_KEY=your-api-key
-VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-project-id
-VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
-VITE_FIREBASE_APP_ID=1:123456789:web:abcdef
-VITE_APP_ENV=development
-VITE_BASE_URL=http://localhost:5173
-```
+Aucune. Le jeu local et le site public fonctionnent sans `.env`. `env.example` ne fait que le rappeler.
 
 ## 📚 Documentation
 

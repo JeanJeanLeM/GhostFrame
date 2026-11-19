@@ -6,7 +6,7 @@ Ce guide détaillé vous accompagne dans la création d'un nouveau jeu pour le t
 
 - Connaissance de base en TypeScript
 - Compréhension des concepts de jeux multi-joueurs
-- Familiarité avec Firebase Firestore
+- Le jeu public se joue sur un seul appareil, sans base de données
 
 ## 🎯 Exemple pas-à-pas : Créer un jeu de Pierre-Papier-Ciseaux
 
@@ -782,7 +782,7 @@ describe('RPS Game Integration', () => {
 
 1. **Lazy loading** : Chargez les modules de jeu à la demande
 2. **Memoization** : Mettez en cache les calculs coûteux
-3. **Debouncing** : Limitez les mises à jour Firestore
+3. **Debouncing** : Limitez les mises à jour trop fréquentes de l'interface
 
 ### Fonctionnalités avancées
 
@@ -793,7 +793,6 @@ describe('RPS Game Integration', () => {
 
 ## 📚 Ressources supplémentaires
 
-- [Documentation Firebase](https://firebase.google.com/docs)
 - [Guide Tailwind CSS](https://tailwindcss.com/docs)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs)
 - [Patterns de jeux multijoueurs](https://www.gabrielgambetta.com/client-server-game-architecture.html)
