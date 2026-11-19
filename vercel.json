@@ -5,6 +5,7 @@
   "rewrites": [
     { "source": "/videos", "destination": "/videos/index.html" },
     { "source": "/motion", "destination": "/motion/index.html" },
-    { "source": "/thomas", "destination": "/thomas/index.html" }
+    { "source": "/thomas", "destination": "/thomas/index.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
