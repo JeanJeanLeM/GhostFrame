@@ -1401,7 +1401,7 @@ export class MisterWhiteGameUI implements GameUI {
   }
 
   private showShareModal(): void {
-    const appUrl = 'https://misswhite-fbb6f.web.app'
+    const appUrl = window.location.origin
 
     const modal = document.createElement('div')
     modal.className = 'fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4'
@@ -2391,8 +2391,7 @@ export class MisterWhiteGameUI implements GameUI {
       const canvas = screen.querySelector('#qr-canvas') as HTMLCanvasElement
       if (!canvas) return
       
-      // URL de production Firebase Hosting
-      const appUrl = 'https://misswhite-fbb6f.web.app'
+      const appUrl = window.location.origin
       
       await QRCode.toCanvas(canvas, appUrl, {
         width: 150,
