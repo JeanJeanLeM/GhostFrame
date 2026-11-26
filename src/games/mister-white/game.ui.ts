@@ -160,7 +160,7 @@ export class MisterWhiteGameUI implements GameUI {
   
   private renderHomeScreen(_state: MisterWhiteGameState): HTMLElement {
     const screen = document.createElement('div')
-    screen.className = 'mister-white-game screen-home relative flex flex-col items-center justify-center min-h-screen overflow-hidden'
+    screen.className = 'mister-white-game screen-home relative flex flex-col items-center justify-center min-h-screen overflow-y-auto'
 
     const backgroundUrl = pickRandomLoadingBackground()
 
@@ -186,6 +186,13 @@ export class MisterWhiteGameUI implements GameUI {
             class="w-full bg-[#2E6BB0] hover:bg-[#255a96] text-white font-bold py-4 px-6 rounded-xl text-lg transition-all transform hover:scale-[1.02] hover:shadow-xl hover:shadow-[#2E6BB0]/30"
           >
             Démarrer une partie
+          </button>
+          <button
+            id="open-shop-btn"
+            type="button"
+            class="w-full border-2 border-[#B9D4EF] bg-[#D8E8F7]/95 hover:bg-[#c9def2] text-[#12283F] font-semibold py-3.5 px-6 rounded-xl text-base transition-all backdrop-blur-sm shadow-sm"
+          >
+            Boutique d'images
           </button>
           <button
             id="show-rules-btn"
@@ -1364,11 +1371,15 @@ export class MisterWhiteGameUI implements GameUI {
   
   private attachHomeEventListeners(screen: HTMLElement): void {
     const startBtn = screen.querySelector('#start-game-btn')
+    const shopBtn = screen.querySelector('#open-shop-btn')
     const rulesBtn = screen.querySelector('#show-rules-btn')
     const shareBtn = screen.querySelector('#share-game-btn')
 
     startBtn?.addEventListener('click', () => {
       this.dispatchGameAction({ type: 'START_FROM_RULES' })
+    })
+    shopBtn?.addEventListener('click', () => {
+      document.dispatchEvent(new CustomEvent('ghost-frame-open-shop'))
     })
     rulesBtn?.addEventListener('click', () => {
       this.dispatchGameAction({ type: 'SHOW_RULES' })
