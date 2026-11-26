@@ -1,6 +1,6 @@
 # Paires V3 — ordre canonique (frame Figma « Accepted »)
 
-Source de vérité pour le jeu : thème **`libre-v3`**, dossier `public/images-v3/`.
+Archive. Le jeu utilise les 32 paires portrait du thème **`playing-pairs`**, dossier `public/playing-pairs/` (frame Figma « Playing pairs »).
 
 Convention Figma / fichiers :
 - **P01A** = paire 1, image A (cadre gauche)
