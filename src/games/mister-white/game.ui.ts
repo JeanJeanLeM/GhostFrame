@@ -1607,8 +1607,8 @@ export class MisterWhiteGameUI implements GameUI {
     })
   }
   
-  /** Thème des paires ordonnées (public/images-v2/pairs.json) */
-  private static readonly IMAGES_THEME = 'libre-v3'
+  /** Thème des paires ordonnées (public/playing-pairs/pairs.json) */
+  private static readonly IMAGES_THEME = 'playing-pairs'
 
   private attachConfigEventListeners(screen: HTMLElement): void {
     const theme = MisterWhiteGameUI.IMAGES_THEME
@@ -1622,7 +1622,7 @@ export class MisterWhiteGameUI implements GameUI {
         const updateHint = () => {
           if (!hint) return
           if (total === 0) {
-            hint.textContent = 'Aucune paire disponible (vérifiez public/images-v2/pairs.json).'
+            hint.textContent = 'Aucune paire disponible (vérifiez public/playing-pairs/pairs.json).'
             return
           }
           const played = Math.max(0, parseInt(gamesPlayedInput?.value || '0') || 0)
@@ -1654,7 +1654,7 @@ export class MisterWhiteGameUI implements GameUI {
         validateBtn.removeAttribute('disabled')
         ;(validateBtn as HTMLButtonElement).textContent = 'Créer les cartes →'
         if (!imagesByRound.length) {
-          alert('Impossible de charger les paires. Vérifiez public/images-v2/pairs.json')
+          alert('Impossible de charger les paires. Vérifiez public/playing-pairs/pairs.json')
           return
         }
         const startingPairId = imagesByRound[0].id

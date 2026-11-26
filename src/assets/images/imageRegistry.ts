@@ -3,8 +3,10 @@ import { ImagePair } from '@games/mister-white/game.state'
 const BASE_IMAGES = '/images/themes'
 /** Manifeste v2 (archive / refusées) */
 const GLOBAL_PAIRS_V2_MANIFEST = '/images-v2/pairs.json'
-/** Manifeste v3 — ordre canonique frame Figma Accepted (voir PAIRS-V3.md) */
+/** Manifeste v3 — archive frame Figma Accepted (voir PAIRS-V3.md) */
 const GLOBAL_PAIRS_V3_MANIFEST = '/images-v3/pairs.json'
+/** 32 paires portrait de la frame Figma « Playing pairs » */
+const PLAYING_PAIRS_MANIFEST = '/playing-pairs/pairs.json'
 
 export interface PairManifestEntry {
   id: string
@@ -19,9 +21,10 @@ export interface PairsManifest {
 
 /**
  * URL du manifeste des paires pour un thème.
- * Pour "libre-v3", utilise public/images-v3/pairs.json (ordre Figma Accepted).
+ * "playing-pairs" est le catalogue joué : public/playing-pairs/pairs.json.
  */
 export function getPairsManifestUrl(theme: string): string {
+  if (theme === 'playing-pairs') return PLAYING_PAIRS_MANIFEST
   if (theme === 'libre-v3') return GLOBAL_PAIRS_V3_MANIFEST
   if (theme === 'libre-v2') return GLOBAL_PAIRS_V2_MANIFEST
   return `${BASE_IMAGES}/${theme}/pairs.json`
@@ -31,6 +34,7 @@ export function getPairsManifestUrl(theme: string): string {
  * Préfixe pour les URLs d'images d'une paire.
  */
 function getBasePathForPair(theme: string, pairId: string): string {
+  if (theme === 'playing-pairs') return `/playing-pairs/${pairId}`
   if (theme === 'libre-v3') return `/images-v3/${pairId}`
   if (theme === 'libre-v2') return `/images-v2/${pairId}`
   return `${BASE_IMAGES}/${theme}/${pairId}`
@@ -80,7 +84,7 @@ export async function hasImagesForTheme(theme: string): Promise<boolean> {
 export async function chooseRandomImagePair(theme: string): Promise<ImagePair | null> {
   const pairs = await fetchPairsForTheme(theme)
   if (pairs.length === 0) {
-    console.warn('[Images] Aucune paire pour le thème', theme, theme === 'libre-v3' ? '— vérifier public/images-v3/pairs.json' : theme === 'libre-v2' ? '— vérifier public/images-v2/pairs.json' : '— vérifier public/images/themes/' + theme + '/pairs.json')
+    console.warn('[Images] Aucune paire pour le thème', theme, theme === 'playing-pairs' ? '— vérifier public/playing-pairs/pairs.json' : theme === 'libre-v3' ? '— vérifier public/images-v3/pairs.json' : theme === 'libre-v2' ? '— vérifier public/images-v2/pairs.json' : '— vérifier public/images/themes/' + theme + '/pairs.json')
     return null
   }
 
@@ -104,8 +108,8 @@ export async function chooseRandomImagePair(theme: string): Promise<ImagePair | 
 /**
  * Liste des thèmes (dossiers sous /images/themes/) à scanner pour les paires.
  */
-/** Thème principal du jeu : libre-v3 (19 paires, ordre Figma Accepted). */
-export const IMAGE_THEMES = ['libre-v3', 'libre-v2', 'animaux', 'nourriture', 'metiers', 'objets', 'emotions'] as const
+/** Thème joué : playing-pairs (32 paires portrait, frame Figma « Playing pairs »). */
+export const IMAGE_THEMES = ['playing-pairs', 'libre-v3', 'libre-v2', 'animaux', 'nourriture', 'metiers', 'objets', 'emotions'] as const
 
 export interface PairOption {
   theme: string
