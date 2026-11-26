@@ -228,18 +228,23 @@ describe('rules summary and small-table note', () => {
     }
   })
 
-  it('draws the logo as inline SVG on the home screen', () => {
-    const state = createInitialGameState()
-    state.phase = 'home'
-    const screen = board(state)
-    const logo = screen.querySelector('svg[aria-label="Ghost Frame"]')
-    expect(logo).not.toBeNull()
-    expect(logo?.classList.contains('gf-logo')).toBe(true)
-    expect(logo?.textContent).toContain('Ghost')
-    expect(logo?.textContent).toContain('FRAME')
-    const body = logo?.querySelector('.gf-body')
-    expect(body).not.toBeNull()
-    expect((body?.getAttribute('d') ?? '').length).toBeLessThan(400)
-    expect(screen.querySelector('img[src*="LogoGF"]')).toBeNull()
+  it('draws the original SD-card logo as inline SVG on every logo screen', () => {
+    for (const phase of ['home', 'config', 'setup', 'game'] as const) {
+      const state = createInitialGameState()
+      state.phase = phase
+      const screen = board(state)
+      const logo = screen.querySelector('svg[aria-label="Ghost Frame"]')
+      expect(logo, phase).not.toBeNull()
+      expect(logo?.classList.contains('gf-logo')).toBe(true)
+      expect(logo?.textContent).toContain('Ghost')
+      expect(logo?.textContent).toContain('FRAME')
+      expect(logo?.querySelector('.gf-card'), phase).not.toBeNull()
+      expect(logo?.querySelector('.gf-ghost'), phase).not.toBeNull()
+      expect(logo?.querySelector('.gf-word'), phase).not.toBeNull()
+      const body = logo?.querySelector('.gf-body')
+      expect(body).not.toBeNull()
+      expect((body?.getAttribute('d') ?? '').length).toBeLessThan(400)
+      expect(screen.querySelector('img[src*="LogoGF"]')).toBeNull()
+    }
   })
 })

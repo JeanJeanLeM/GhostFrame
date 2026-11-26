@@ -199,7 +199,7 @@
   }
 }
 
-/* Drawn Ghost Frame mark. The ghost drifts; the words stay still so the name stays readable. */
+/* Original Ghost Frame mark. The ghost drifts; the card and the wordmark stay still. */
 .gf-logo {
   overflow: visible;
 }
@@ -218,34 +218,6 @@
   50% {
     transform: translateY(-6px);
   }
-}
-
-/* Photo screens need a light mark. Beige screens keep the navy ink in the SVG. */
-.screen-home .gf-logo .gf-body,
-.screen-loading .gf-logo .gf-body {
-  fill: #fffdf8;
-  stroke: #17324f;
-  stroke-width: 6;
-  stroke-linejoin: round;
-}
-
-.screen-home .gf-logo .gf-eye,
-.screen-loading .gf-logo .gf-eye {
-  fill: #17324f;
-}
-
-.screen-home .gf-logo .gf-smile,
-.screen-loading .gf-logo .gf-smile {
-  stroke: #17324f;
-}
-
-.screen-home .gf-logo .gf-word,
-.screen-loading .gf-logo .gf-word {
-  fill: #fffdf8;
-  stroke: #17324f;
-  stroke-width: 3;
-  paint-order: stroke fill;
-  stroke-linejoin: round;
 }
 
 @media (prefers-reduced-motion: reduce) {
