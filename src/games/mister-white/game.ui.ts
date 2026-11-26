@@ -163,7 +163,7 @@ export class MisterWhiteGameUI implements GameUI {
 
       <div class="relative z-10 text-center w-full flex flex-col items-center justify-center min-h-screen px-6">
         <div class="mb-16 w-full">
-          ${ghostFrameLogoHtml('w-full max-w-md mx-auto drop-shadow-2xl animate-pulse')}
+          ${ghostFrameLogoHtml('w-full max-w-md mx-auto drop-shadow-2xl')}
         </div>
 
         <div class="progress-container mb-4 max-w-lg mx-auto w-full">
