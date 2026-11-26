@@ -199,18 +199,12 @@
   }
 }
 
-/* Original Ghost Frame mark. The ghost drifts; the card and the wordmark stay still. */
+/* Original artwork. The whole mark drifts a little; the cut is too tight to lift the ghost alone. */
 .gf-logo {
-  overflow: visible;
+  animation: gf-logo-float 3.2s ease-in-out infinite;
 }
 
-.gf-logo .gf-ghost {
-  transform-box: fill-box;
-  transform-origin: center bottom;
-  animation: gf-ghost-float 3.2s ease-in-out infinite;
-}
-
-@keyframes gf-ghost-float {
+@keyframes gf-logo-float {
   0%,
   100% {
     transform: translateY(0);
@@ -221,7 +215,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gf-logo .gf-ghost {
+  .gf-logo {
     animation: none;
   }
 }
