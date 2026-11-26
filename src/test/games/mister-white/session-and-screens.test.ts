@@ -228,18 +228,22 @@ describe('rules summary and small-table note', () => {
     }
   })
 
-  it('draws the logo as inline SVG on the home screen', () => {
-    const state = createInitialGameState()
-    state.phase = 'home'
-    const screen = board(state)
-    const logo = screen.querySelector('svg[aria-label="Ghost Frame"]')
-    expect(logo).not.toBeNull()
-    expect(logo?.classList.contains('gf-logo')).toBe(true)
-    expect(logo?.textContent).toContain('Ghost')
-    expect(logo?.textContent).toContain('FRAME')
-    const body = logo?.querySelector('.gf-body')
-    expect(body).not.toBeNull()
-    expect((body?.getAttribute('d') ?? '').length).toBeLessThan(400)
-    expect(screen.querySelector('img[src*="LogoGF"]')).toBeNull()
+  it('shows the cleaned Ghost Frame artwork on every logo screen', () => {
+    vi.useFakeTimers()
+    try {
+      for (const phase of ['loading', 'home', 'config', 'setup', 'game'] as const) {
+        const state = createInitialGameState()
+        state.phase = phase
+        const screen = board(state)
+        const logo = screen.querySelector('img.gf-logo')
+        expect(logo, phase).not.toBeNull()
+        expect(logo?.getAttribute('alt')).toBe('Ghost Frame')
+        expect(logo?.getAttribute('src')).toBe('/logo/ghost-frame.webp')
+        expect(screen.querySelector('svg.gf-logo')).toBeNull()
+      }
+    } finally {
+      vi.clearAllTimers()
+      vi.useRealTimers()
+    }
   })
 })
