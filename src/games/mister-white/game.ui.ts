@@ -6,6 +6,8 @@ import {
   getRoleDistributionRows
 } from './game.state'
 import { getStoredGamesPlayed, recordGameSessionCompleted } from './gamesPlayedStorage'
+import { RULES_SUMMARY, smallGroupSpeechNote } from './playCopy'
+import { ghostFrameLogoHtml } from '@assets/icons/ghost-frame-logo'
 import QRCode from 'qrcode'
 
 /**
@@ -30,6 +32,27 @@ export class MisterWhiteGameUI implements GameUI {
   private container: HTMLElement | null = null
   /** URLs d'images déjà préchargées en cache navigateur */
   private preloadedImageUrls = new Set<string>()
+  /** Open overlays, topmost last. A right swipe consumes the top one. */
+  private swipeBackHandlers: Array<() => boolean> = []
+
+  /**
+   * Goes back one step inside an open overlay (a card step, a rules page, or the overlay itself).
+   * Returns false when no overlay is open, so the game can step back a phase.
+   */
+  tryConsumeSwipeBack(): boolean {
+    for (let i = this.swipeBackHandlers.length - 1; i >= 0; i--) {
+      if (this.swipeBackHandlers[i]()) return true
+    }
+    return false
+  }
+
+  private trackSwipeBack(handler: () => boolean): () => void {
+    this.swipeBackHandlers.push(handler)
+    return () => {
+      const index = this.swipeBackHandlers.indexOf(handler)
+      if (index >= 0) this.swipeBackHandlers.splice(index, 1)
+    }
+  }
   
   setContainer(container: HTMLElement): void {
     this.container = container
@@ -140,7 +163,7 @@ export class MisterWhiteGameUI implements GameUI {
 
       <div class="relative z-10 text-center w-full flex flex-col items-center justify-center min-h-screen px-6">
         <div class="mb-16 w-full">
-          <img src="/LogoGF-styled-sd.png" alt="Ghost Frame Logo" class="w-full max-w-md mx-auto drop-shadow-2xl animate-pulse" />
+          ${ghostFrameLogoHtml('w-full max-w-md mx-auto drop-shadow-2xl animate-pulse')}
         </div>
 
         <div class="progress-container mb-4 max-w-lg mx-auto w-full">
@@ -174,7 +197,7 @@ export class MisterWhiteGameUI implements GameUI {
       <div class="absolute inset-0 bg-gradient-to-b from-white/32 via-white/38 to-white/44 backdrop-blur-[0.5px] z-[1]"></div>
 
       <div class="relative z-10 w-full max-w-sm flex flex-col items-center justify-center flex-1 px-4 py-6">
-        <img src="/LogoGF-styled-sd.png" alt="Ghost Frame" class="w-full max-w-[220px] h-auto object-contain mx-auto drop-shadow-2xl mb-4" />
+        ${ghostFrameLogoHtml('w-full max-w-[220px] h-auto mx-auto drop-shadow-2xl mb-4')}
         <p class="text-white text-sm text-center mb-8 leading-snug font-semibold [text-shadow:0_1px_4px_rgba(0,0,0,0.55)]">
           Jeu de déduction et de bluff<br>Qui a la bonne photo ?
         </p>
@@ -225,6 +248,9 @@ export class MisterWhiteGameUI implements GameUI {
         </button>
 
         <div class="flex-1 overflow-y-auto min-h-0 pb-4">
+          <p class="text-beige-800 text-sm leading-relaxed mb-4" data-rules-summary>
+            ${RULES_SUMMARY}
+          </p>
           <h1 class="text-xl font-bold text-beige-900 text-center mb-1">Règles rapides</h1>
           <p class="text-beige-700 text-sm text-center mb-4">
             Le jeu se joue sur un seul téléphone. Chaque joueur découvre secrètement son image à son tour.
@@ -357,7 +383,7 @@ export class MisterWhiteGameUI implements GameUI {
     screen.className = 'mister-white-game screen-config w-full px-2 pt-0 pb-4 max-w-md mx-auto'
     
     screen.innerHTML = `
-      <img src="/LogoGF-styled-sd.png" alt="Ghost Frame" class="w-full max-w-lg h-44 object-contain mx-auto drop-shadow-lg" />
+      ${ghostFrameLogoHtml('w-full max-w-lg h-44 mx-auto drop-shadow-lg')}
       <div class="flex items-center justify-center mb-1">
         <span class="text-xl mr-2">⚙️</span>
         <h2 class="text-lg font-bold text-beige-900">CONFIGURATION</h2>
@@ -429,7 +455,7 @@ export class MisterWhiteGameUI implements GameUI {
     const allConfigured = configuredCount === state.config.playerCount
     
     screen.innerHTML = `
-      <img src="/LogoGF-styled-sd.png" alt="Ghost Frame" class="w-full max-w-lg h-44 object-contain mx-auto drop-shadow-lg" />
+      ${ghostFrameLogoHtml('w-full max-w-lg h-44 mx-auto drop-shadow-lg')}
       <div class="flex items-center justify-center mb-1">
         <span class="text-xl mr-2">🃏</span>
         <h2 class="text-lg font-bold text-beige-900">SETUP DES CARTES</h2>
@@ -471,9 +497,10 @@ export class MisterWhiteGameUI implements GameUI {
   private renderGameScreen(state: MisterWhiteGameState): HTMLElement {
     const screen = document.createElement('div')
     screen.className = 'mister-white-game screen-game w-full px-2 pt-0 pb-4 mx-auto'
+    const speechNote = smallGroupSpeechNote(state.config.playerCount)
     
     screen.innerHTML = `
-      <img src="/LogoGF-styled-sd.png" alt="Ghost Frame" class="w-full max-w-md h-36 object-contain mx-auto drop-shadow-lg" />
+      ${ghostFrameLogoHtml('w-full max-w-md h-36 mx-auto drop-shadow-lg')}
       
       <div class="bg-error-100 border-2 border-error-500 rounded-xl p-2 mb-2 text-center max-w-md mx-auto">
         <p class="text-beige-800 text-xs">Premier joueur :</p>
@@ -481,6 +508,11 @@ export class MisterWhiteGameUI implements GameUI {
       </div>
       
       <p class="text-warning-700 font-semibold text-xs text-center mb-2">⚠️ Cliquez sur un joueur pour l'éliminer</p>
+      ${speechNote ? `
+        <p class="text-beige-900 text-sm text-center font-medium mb-3 max-w-md mx-auto bg-primary-100 border border-primary-400 rounded-xl px-3 py-2" data-small-group-note>
+          ${speechNote}
+        </p>
+      ` : ''}
       
       <div class="game-cards grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
         ${this.renderGameCards(state)}
@@ -1426,7 +1458,15 @@ export class MisterWhiteGameUI implements GameUI {
       </div>
     `
 
-    const closeModal = () => modal.remove()
+    let releaseSwipe = () => {}
+    const closeModal = () => {
+      releaseSwipe()
+      modal.remove()
+    }
+    releaseSwipe = this.trackSwipeBack(() => {
+      closeModal()
+      return true
+    })
     modal.querySelector('#close-share-btn')?.addEventListener('click', closeModal)
     modal.addEventListener('click', (e) => {
       if (e.target === modal) closeModal()
@@ -1587,9 +1627,19 @@ export class MisterWhiteGameUI implements GameUI {
       nextBtn.textContent = index === PAGES.length - 1 ? 'Fermer' : 'Suivant'
     }
 
+    let releaseSwipe = () => {}
     const closeModal = () => {
+      releaseSwipe()
       if (modal.parentNode) document.body.removeChild(modal)
     }
+    releaseSwipe = this.trackSwipeBack(() => {
+      if (currentPage > 0) {
+        renderPage(currentPage - 1)
+        return true
+      }
+      closeModal()
+      return true
+    })
 
     prevBtn.addEventListener('click', () => {
       if (currentPage > 0) renderPage(currentPage - 1)
@@ -1779,11 +1829,18 @@ export class MisterWhiteGameUI implements GameUI {
     `
 
     document.body.appendChild(modal)
-    this.attachCardConfigListeners(modal, cardIndex, state, skipNameStep, () => {
-      document.body.removeChild(modal)
+    let releaseSwipe = () => {}
+    const closeModal = () => {
+      releaseSwipe()
+      if (modal.parentNode) document.body.removeChild(modal)
+    }
+    releaseSwipe = this.trackSwipeBack(() => {
+      closeModal()
+      return true
     })
+    this.attachCardConfigListeners(modal, cardIndex, state, skipNameStep, closeModal)
     modal.addEventListener('click', (e) => {
-      if (e.target === modal) document.body.removeChild(modal)
+      if (e.target === modal) closeModal()
     })
   }
 
@@ -1815,9 +1872,20 @@ export class MisterWhiteGameUI implements GameUI {
       </div>
     ` : ''
 
+    let releaseSwipe = () => {}
     const closeModal = () => {
-      document.body.removeChild(modal)
+      releaseSwipe()
+      if (modal.parentNode) document.body.removeChild(modal)
     }
+    releaseSwipe = this.trackSwipeBack(() => {
+      if (step === 2 && !skipNameStep) {
+        step = 1
+        renderStep()
+        return true
+      }
+      closeModal()
+      return true
+    })
 
     const validateName = (): boolean => {
       const input = modal.querySelector('#player-name-input') as HTMLInputElement
@@ -2089,9 +2157,11 @@ export class MisterWhiteGameUI implements GameUI {
     const confirmBtn = modal.querySelector('#confirm-elimination-btn')
     const cancelBtn = modal.querySelector('#cancel-elimination-btn')
     
+    let releaseSwipe = () => {}
     const cleanup = () => {
-      document.body.removeChild(modal)
-      document.head.removeChild(style)
+      releaseSwipe()
+      if (modal.parentNode) document.body.removeChild(modal)
+      if (style.parentNode) document.head.removeChild(style)
     }
     
     const handleConfirm = () => {
@@ -2102,6 +2172,10 @@ export class MisterWhiteGameUI implements GameUI {
     const handleCancel = () => {
       cleanup()
     }
+    releaseSwipe = this.trackSwipeBack(() => {
+      handleCancel()
+      return true
+    })
     
     confirmBtn?.addEventListener('click', handleConfirm)
     cancelBtn?.addEventListener('click', handleCancel)
